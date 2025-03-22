@@ -21,43 +21,46 @@ const Login = () => {
       });
 
       if (response.status === 200) {
-        const { _id, role, fullName, pharmacy, branches,reSeted, passwordChangeDate} = response.data.user;
+        const { _id, role, fullName, pharmacy, branches, reSeted, passwordChangeDate } = response.data.user;
         const nameParts = fullName.split(" ");
         const filteredUsername = `${nameParts[0]} ${nameParts[1] || ""}`.trim();
-        
+
         const pharmacyResponse = await axios.get(`http://localhost:5000/pharmacies/getPharmacyById/${pharmacy}`);
 
         localStorage.setItem("token", response.data.sessionToken);
         localStorage.setItem("userName", filteredUsername);
         localStorage.setItem("pharmacy", pharmacy);
+        localStorage.setItem("branches", branches);
         localStorage.setItem("id", _id);
-
         localStorage.setItem("branches", branches);
         localStorage.setItem("role", role);
         localStorage.setItem("PharmacyName", pharmacyResponse.data.name);
         localStorage.setItem("PharmacyLogo", pharmacyResponse.data.logo);
         localStorage.setItem("brandColor", pharmacyResponse.data.brandColor);
-        
+
         const currentDate = new Date();
         const changeDate = new Date(passwordChangeDate);
         currentDate.setHours(0, 0, 0, 0);
         changeDate.setHours(0, 0, 0, 0);
-      
+
         const diffTime = currentDate - changeDate;
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
-      
-        if (diffDays > 1) {
-          navigate("/PharmacSphere/ChangePassword"); 
-        }
-        else if (reSeted=== false)
-        {
-        if (pharmacyResponse.data.status === "Active") {
-          navigate("/PharmacSphere/Portal");
+
+        if (diffDays > 60) {
+          // Show confirmation dialog
+          const confirmed = window.confirm("Your password is expired. Please change it before logging in.");
+          if (confirmed) {
+            navigate("/PharmacSphere/ChangePassword");
+          }
+        } else if (reSeted === false) {
+          if (pharmacyResponse.data.status === "Active") {
+            navigate("/PharmacSphere/Portal");
+          } else {
+            setError(pharmacyResponse.data.message || "Your Pharmacy is no longer available.");
+          }
         } else {
-          setError(pharmacyResponse.data.message || "Your Pharmacy is no longer available.");
-        }}
-        else (navigate("/PharmacSphere/ChangePassword"))
-      
+          navigate("/PharmacSphere/ChangePassword");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -81,7 +84,7 @@ const Login = () => {
             <img
               alt="Pharma Sphere Logo"
               className="h-full w-full object-cover"
-              src={pharmaLogo} 
+              src={pharmaLogo}
             />
           </div>
         </div>

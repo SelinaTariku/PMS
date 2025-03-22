@@ -73,25 +73,29 @@ const BranchDetails = ({ category, goBack, brandColor }) => {
     return sortableItems;
   }, [detailData, sortConfig]);
 
+  const formatWorkingHoursAsList = (workingHours) => {
+    return Object.entries(workingHours).map(([day, hours]) => (
+      <li key={day}>
+        {day.charAt(0).toUpperCase() + day.slice(1)}: {hours.start ? `${hours.start} - ${hours.end}` : 'Closed'}
+      </li>
+    ));
+  };
+
   return (
-    <div className="bg-gray-10 min-h-screen max-w-screen-lg absolute">
+    <div className="bg-gray-100">
       <div className="flex items-center space-x-4 mb-3">
-        {/* Back Button */}
         <button
           onClick={goBack}
-          className="relative p-3 text-white rounded-full shadow-lg hover:bg-[#1E467A]"
+          className="p-3 text-white rounded-full shadow-lg hover:bg-[#1E467A]"
           style={{ background: brandColor }}
         >
           <FaArrowLeft size={15} />
         </button>
-
-        {/* Heading */}
-        <h1 className="text-xl font-semibold text-center" style={{ color: brandColor }}>
+        <h1 className="text-xl font-semibold text-center flex-1" style={{ color: brandColor }}>
           Details for {category}
         </h1>
       </div>
 
-      {/* Loading and Error Handling */}
       {loading && (
         <div className="text-center text-gray-600" style={{ color: brandColor }}>
           Loading...
@@ -105,52 +109,50 @@ const BranchDetails = ({ category, goBack, brandColor }) => {
       )}
 
       {!loading && !error && (
-        <div className="bg-white p-1 rounded-lg shadow-lg">
+        <div className="bg-white rounded-lg">
           {sortedData.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border-collapse">
-                <thead>
-                  <tr>
-                    {["mnemonic", "name", "status", "workingHours", "createdBy", "createdAt", "averageRate", "rateCount", "views"].map((header) => (
-                      <th
-                        key={header}
-                        className="border-b px-3 py-2 text-left text-sm"
-                        style={{ color: brandColor }}
-                        onClick={() => requestSort(header)}
-                      >
-                        <div className="flex items-center justify-between">
-                          {header.charAt(0).toUpperCase() + header.slice(1).replace(/([A-Z])/g, ' $1')}
-                          {sortConfig.key === header && (
-                            sortConfig.direction === 'ascending' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
-                          )}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedData.map((branch) => (
-                    <tr key={branch._id}>
-                      <td className="border-b py-2 px-3 text-sm">{branch.mnemonic}</td>
-                      <td className="border-b py-2 px-3 text-sm">{branch.name}</td>
-                      <td className="border-b py-2 px-3 text-sm">
-                        <span className={`text-sm ${branch.status === "Active" ? "text-green-600" : "text-red-600"}`}>
-                          {branch.status}
-                        </span>
-                      </td>
-                      <td className="border-b py-2 px-3 text-sm">{branch.workingHours}</td>
-                      <td className="border-b py-2 px-3 text-sm">{createdBy || "N/A"}</td>
-                      <td className="border-b py-2 px-3 text-sm">
-                        {isValidDate(branch.createdAt) ? new Date(branch.createdAt).toLocaleString() : "N/A"}
-                      </td>
-                      <td className="border-b py-2 px-3 text-sm">{branch.rate?.average || "N/A"}</td>
-                      <td className="border-b py-2 px-3 text-sm">{branch.rate?.count || "N/A"}</td>
-                      <td className="border-b py-2 px-3 text-sm">{branch.views || 0}</td>
-                    </tr>
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr>
+                  {["mnemonic", "name", "status", "createdBy", "createdAt", "averageRate", "rateCount", "views"].map((header) => (
+                    <th
+                      key={header}
+                      className="border-b px-3 py-2 text-left text-sm"
+                      style={{ color: brandColor }}
+                      onClick={() => requestSort(header)}
+                    >
+                      <div className="flex items-center justify-between">
+                        {header.charAt(0).toUpperCase() + header.slice(1).replace(/([A-Z])/g, ' $1')}
+                        {sortConfig.key === header && (
+                          sortConfig.direction === 'ascending' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                        )}
+                      </div>
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedData.map((branch) => (
+                  <tr key={branch._id}>
+                    <td className="border-b py-2 px-3 text-sm">{branch.mnemonic}</td>
+                    <td className="border-b py-2 px-3 text-sm">{branch.name}</td>
+                    <td className="border-b py-2 px-3 text-sm">
+                      <span className={`text-sm ${branch.status === "Open" ? "text-green-600" : "text-red-600"}`}>
+                        {branch.status}
+                      </span>
+                    </td>
+
+                    <td className="border-b py-2 px-3 text-sm">{createdBy || "N/A"}</td>
+                    <td className="border-b py-2 px-3 text-sm">
+                      {isValidDate(branch.createdAt) ? new Date(branch.createdAt).toLocaleString() : "N/A"}
+                    </td>
+                    <td className="border-b py-2 px-3 text-sm">{branch.rate?.average || "N/A"}</td>
+                    <td className="border-b py-2 px-3 text-sm">{branch.rate?.count || "N/A"}</td>
+                    <td className="border-b py-2 px-3 text-sm">{branch.views || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <p>No branch available for this category.</p>
           )}

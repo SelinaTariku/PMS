@@ -21,7 +21,7 @@ const ManagePermission = () => {
   const [title, setTitle] = useState('Manage Permissions');
   const [modalType, setModalType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // Set items per page
+  const [itemsPerPage] = useState(6); 
 
   const brandColor = localStorage.getItem('brandColor') || '#007bff';
 
@@ -180,7 +180,7 @@ const ManagePermission = () => {
 
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full flex flex-col items-center">
+        <div className="bg-white rounded-lg shadow-lg max-w-sm w-full flex flex-col items-center">
           <button
             onClick={onClose}
             className="absolute top-2 right-2 text-red-600"
@@ -241,7 +241,7 @@ const ManagePermission = () => {
               setShowForm(true);
               setTitle('Create New Permissions');
             }}
-            className="mb-2 w-60 text-white p-2 rounded transition"
+            className="mb-2 w-60 text-white px-2 py-1 rounded transition"
             style={{ background: brandColor }}
           >
             <FontAwesomeIcon icon={faPlus} /> Create New Permission
@@ -252,32 +252,32 @@ const ManagePermission = () => {
             placeholder="Search Permissions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-60 p-2 ml-10 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-300 mb-2"
+            className="w-60 px-2 py-1 ml-10 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-300 mb-2"
           />
 
           <div className="max-h-64 overflow-y-auto">
             <table className="w-full text-left">
               <thead style={{ color: brandColor }}>
                 <tr>
-                  <th className="p-2 cursor-pointer" onClick={() => requestSort('name')}>
+                  <th className="px-2 py-2 cursor-pointer" onClick={() => requestSort('name')}>
                     Name {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
                   </th>
-                  <th className="p-2 cursor-pointer" onClick={() => requestSort('description')}>
+                  <th className="px-2 py-2 cursor-pointer" onClick={() => requestSort('description')}>
                     Description {sortConfig.key === 'description' && (sortConfig.direction === 'ascending' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
                   </th>
-                  <th className="p-2 cursor-pointer" onClick={() => requestSort('level')}>
+                  <th className="px-2 py-2 cursor-pointer" onClick={() => requestSort('level')}>
                     Level {sortConfig.key === 'level' && (sortConfig.direction === 'ascending' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
                   </th>
-                  <th className="p-2">Actions</th>
+                  <th className="px-2 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {currentPages.map((page) => (
                   <tr key={page._id} className="hover:bg-gray-100">
-                    <td className="py-2 px-2">{page.name}</td>
-                    <td className="py-2 px-2">{page.description}</td>
-                    <td className="py-2 px-2">{page.level}</td>
-                    <td className="py-2 px-2 flex space-x-2">
+                    <td className="px-2 py-2 text-sm">{page.name}</td>
+                    <td className="px-2 py-2 text-sm">{page.description}</td>
+                    <td className="px-2 py-2 text-sm">{page.level}</td>
+                    <td className="px-2 py-2 text-sm flex space-x-2">
                       <button onClick={() => handleEdit(page)} style={{color:brandColor}} className=" text-white px-4 rounded transition">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
@@ -296,7 +296,7 @@ const ManagePermission = () => {
               <button
                 key={number}
                 onClick={() => setCurrentPage(number)}
-                className={`mx-1 px-2 py-1 rounded ${currentPage === number ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                className={`mx-1 px-2 py-1 rounded ${currentPage === number ? 'bg-blue-900 text-white' : 'bg-gray-200 text-black'}`}
               >
                 {number}
               </button>

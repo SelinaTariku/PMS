@@ -211,10 +211,10 @@ const RoleManagement = () => {
   };
 
   return (
-    <div className="container p-4 mx-auto max-w-7xl">
+    <div className="container p-2 mx-auto max-w-7xl">
       {showCreateRole ? (
         <>
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-2">
             <button
               onClick={handleBackToRoleManagement}
               className="text-white mr-2 px-2 text-2xl"
@@ -232,7 +232,7 @@ const RoleManagement = () => {
         </>
       ) : (
         <>
-          <h2 className="text-2xl font-bold mb-2" style={{ color: brandColor }}>Role Management</h2>
+          <h2 className="text-2xl font-bold mb-1" style={{ color: brandColor }}>Role Management</h2>
 
           <div className="mb-2 flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center mb-2 md:mb-0">
@@ -260,7 +260,7 @@ const RoleManagement = () => {
           </div>
 
           {selectedRole && (
-            <div className="mb-4 overflow-x-auto">
+            <div className="mb-2 overflow-x-auto">
               <table className="min-w-full bg-white border border-gray-300">
                 <thead>
                   <tr className="bg-gray-100">
@@ -274,12 +274,12 @@ const RoleManagement = () => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-300 px-4 py-1">{roleDetails.name}</td>
-                    <td className="border border-gray-300 px-4 py-1">{createdByEmail}</td>
-                    <td className="border border-gray-300 px-4 py-1">{new Date(roleDetails.createdAt).toLocaleString()}</td>
-                    <td className="border border-gray-300 px-4 py-1">{updatedByEmail}</td>
-                    <td className="border border-gray-300 px-4 py-1">{new Date(roleDetails.updatedAt).toLocaleString()}</td>
-                    <td className="border border-gray-300 px-4 py-1">{roleDetails.level}</td>
+                    <td className="border border-gray-300 px-4 py-1 text-sm">{roleDetails.name}</td>
+                    <td className="border border-gray-300 px-4 py-1 text-sm">{createdByEmail}</td>
+                    <td className="border border-gray-300 px-4 py-1 text-sm">{new Date(roleDetails.createdAt).toLocaleString()}</td>
+                    <td className="border border-gray-300 px-4 py-1 text-sm">{updatedByEmail}</td>
+                    <td className="border border-gray-300 px-4 py-1 text-sm">{new Date(roleDetails.updatedAt).toLocaleString()}</td>
+                    <td className="border border-gray-300 px-4 py-1 text-sm">{roleDetails.level}</td>
                   </tr>
                 </tbody>
               </table>
@@ -288,8 +288,8 @@ const RoleManagement = () => {
 
           {selectedRole && (
             <div>
-              <h3 className="text-xl mb-2" style={{color: brandColor}}>Permissions:</h3>
-              <div className="max-h-40 overflow-y-auto border p-2 mb-4">
+              <h3 className="text-xl mb-1" style={{color: brandColor}}>Permissions:</h3>
+              <div className="max-h-40 overflow-y-auto border p-2 mb-2">
                 {permissions.map(permission => {
                   const isChecked = rolePermissions.includes(permission._id);
                   return (
@@ -308,7 +308,7 @@ const RoleManagement = () => {
               </div>
               <button
                 onClick={handleSavePermissions}
-                className="text-white px-4 py-2 rounded mt-4 w-full md:w-auto"
+                className="text-white px-4 py-1 rounded mt-1 w-full md:w-auto"
                 style={{ background: brandColor }}
               >
                 Save Permissions

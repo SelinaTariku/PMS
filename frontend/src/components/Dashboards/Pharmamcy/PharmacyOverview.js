@@ -10,7 +10,8 @@ const PharmacyOverview = () => {
     dailyRegistration: 0,
     dailyApproved: 0,
   });
-const brandColor = localStorage.getItem('brandColor');
+  
+  const brandColor = localStorage.getItem('brandColor') || '#1E467A'; // Default color if none is set
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
@@ -25,13 +26,13 @@ const brandColor = localStorage.getItem('brandColor');
     };
 
     fetchSummaryData();
-    const intervalId = setInterval(fetchSummaryData, 3000); 
+    const intervalId = setInterval(fetchSummaryData, 3000);
     return () => clearInterval(intervalId);
   }, []);
 
   const Card = ({ title, value, category }) => (
     <div
-      className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg cursor-pointer"
+      className="bg-white p-6 rounded-lg shadow-lg w-full cursor-pointer transition-transform duration-200 hover:scale-105"
       onClick={() => setSelectedCategory(category)}
     >
       <h2 className="text-gray-600" style={{ color: brandColor }}>{title}</h2>
@@ -42,16 +43,16 @@ const brandColor = localStorage.getItem('brandColor');
   );
 
   return (
-    <div className="bg-gray-100 p-1">
+    <div className="bg-gray-100">
       <div className="w-full">
         {!selectedCategory ? (
           <>
             <h1 className="text-xl font-bold mb-4" style={{ color: brandColor }}>Pharmacy Overview</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
               {Object.entries(summaryData).map(([key, value]) => (
                 <Card
                   key={key}
-                  title={key.replace(/([A-Z])/g, ' $1').trim()} 
+                  title={key.replace(/([A-Z])/g, ' $1').trim()}
                   value={value}
                   category={key}
                 />

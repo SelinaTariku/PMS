@@ -1,42 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faCaretUp, faCaretDown, faEye, faSearch } from '@fortawesome/free-solid-svg-icons';
-import userAPI from "../API/userApi";
-import UpdatePharmacyForm from './updateUser'; 
-import ViewPharmacyDetail from './viewUser';
-import CreateUser from './createUser'; 
+import React, { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faCaretUp, faCaretDown, faEye, faSearch } from "@fortawesome/free-solid-svg-icons";
+import branchAPI from "../API/branchAPI"; 
+import UpdateBranchForm from './updateBranch'; 
+import ViewBranchDetail from './viewBranch';
+import CreateBranch from './createBranch'; 
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
-import axios from "axios";
 import Modal from '../Modal'; 
 
-const PharmacyManagement = () => {
-  const initialuserData = () => ({
-    fullName: '',
-    email: '',
-    role: '',
-    street: '',
-    city: '',
-    state: '',
-    phone: '',
-    branches: '',
-    pharmacy: '',
+const BranchManagement = () => {
+  const initialBranchData = () => ({
+    name: '',
+    mnemonic: '',
     status: '',
-    lock: '',
-    lastSignOn: '',
-    lockedAt: '',
-    CURR: 0,
+    workingHours: {
+      Monday: { open: '', close: '' },
+      Tuesday: { open: '', close: '' },
+      Wednesday: { open: '', close: '' },
+      Thursday: { open: '', close: '' },
+      Friday: { open: '', close: '' },
+      Saturday: { open: '', close: '' },
+      Sunday: { open: '', close: '' },
+    },
+    location: {
+      lat: 0,
+      lng: 0,
+    },
+    pharmacyId: localStorage.getItem('pharmacy'), 
+    createdBy: localStorage.getItem('id'), 
   });
 
-  const [userData, setuserData] = useState(initialuserData());
+  const [branchData, setBranchData] = useState(initialBranchData());
   const [isEditing, setIsEditing] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
   const [isCreating, setIsCreating] = useState(false); 
   const [searchResults, setSearchResults] = useState([]);
-  const [filteredResults, setFilteredResults] = useState([]);
-  const [roleName, setroleName] = useState(null);
-  const [isAdmin, setisAdmin] = useState(false);
+  const [filteredResults, setFilteredResults] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
@@ -44,84 +45,40 @@ const PharmacyManagement = () => {
   const brandColor = localStorage.getItem('brandColor');
   const [errors, setErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(4); 
+  const [itemsPerPage] = useState(5); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredResults.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
 
   useEffect(() => {
-    const fetchRole = async () => {
+    const fetchBranches = async () => {
       setLoading(true); 
       try {
-        const role = localStorage.getItem('role');
-        const response = await axios.get(`http://localhost:5000/role/getRoleById/${role}`);
-        const roleName = response.data.name;
-        setroleName(roleName);
-        setisAdmin(roleName === 'Admin'); 
+        const pharmacyId = localStorage.getItem('pharmacy');
+        const response = await branchAPI.getBranchesByPharmacyId(pharmacyId);
+        if (Array.isArray(response)) {
+          setSearchResults(response);
+          setFilteredResults(response); 
+        } else {
+          console.error("Unexpected response format:", response);
+        }
       } catch (error) {
-        console.error("Error fetching role data:", error);
+        console.error("Error fetching branches:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRole();
+    fetchBranches();
+    const intervalId = setInterval(fetchBranches, 5000);
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
-    const fetchRecord = async () => {
-      setLoading(true); 
-      try {
-        let data;
-        if (isAdmin) {
-          data = await userAPI.fetchAllLiveByRole();
-          console.log("User for Admin: ", data);
-        } else  {
-          
-          const pharmacyId = localStorage.getItem('pharmacy')
-          data = await userAPI.fetchAllLiveByPharmacy(pharmacyId);
-          console.log("User for Manage: ", data);
-        }
-
-        if (data && data.length) {
-          const usersWithRoles = await Promise.all(data.map(async (user) => {
-            const roleResponse = await axios.get(`http://localhost:5000/role/getRoleById/${user.role}`);
-            return {
-              ...user,
-              role: roleResponse.data.name
-            };
-          }));
-
-          setSearchResults(usersWithRoles);
-          setFilteredResults(usersWithRoles);
-        } else {
-          console.warn("No users found for the current role.");
-          setSearchResults([]);
-          setFilteredResults([]);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecord();
-    const intervalId = setInterval(fetchRecord, 5000);
-    return () => clearInterval(intervalId);
-  }, [isAdmin]);
-
-  useEffect(() => {
     if (searchValue) {
-      const filtered = searchResults.filter((pharmacy) =>
-        pharmacy.email.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.fullName.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.phone.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.status.toLowerCase().includes(searchValue.toLowerCase())
+      const filtered = searchResults.filter((branch) =>
+        branch.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+        branch.mnemonic.toLowerCase().includes(searchValue.toLowerCase()) ||
+        branch.status.toLowerCase().includes(searchValue.toLowerCase())
       );
       setFilteredResults(filtered);
     } else {
@@ -149,52 +106,21 @@ const PharmacyManagement = () => {
     setCurrentPage(1);
   };
 
-  const exportToCSV = () => {
-    return filteredResults.map(pharmacy => ({
-      Email: pharmacy.email,
-      Name: pharmacy.fullName,
-      Phone: pharmacy.phone,
-      Status: pharmacy.status,
-      Role: pharmacy.role // Include role in CSV export
-    }));
+  const formatWorkingHours = (workingHours) => {
+    return Object.entries(workingHours).map(([day, hours]) => {
+      return `${day}: ${hours.open} - ${hours.close}`;
+    }).join(', ');
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    const tableColumn = ["Email", "Pharmacy Name", "Phone Number", "Status", "Role", "Created At"];
-    const tableRows = [];
-
-    filteredResults.forEach(pharmacy => {
-      const userData = [
-        pharmacy.email,
-        pharmacy.fullName,
-        pharmacy.phone,
-        pharmacy.status,
-        pharmacy.role,
-        pharmacy.createdAt,
-      ];
-      tableRows.push(userData);
-    });
-
-    autoTable(doc, { head: [tableColumn], body: tableRows });
-    doc.save("user_data.pdf");
-  };
-
-  const handleEdituserData = (pharmacy) => {
-    const loggedInUserId = localStorage.getItem('id'); 
-    if (loggedInUserId === pharmacy._id) {
-      setModalMessage("You cannot edit your own account.");
-      setIsModalOpen(true); 
-      return; 
-    } 
-    setuserData(pharmacy);
+  const handleEditBranchData = (branch) => {
+    setBranchData(branch);
     setIsEditing(true);
     setIsViewing(false);
     setIsCreating(false); 
   };
 
-  const handleViewuserData = (pharmacy) => {
-    setuserData(pharmacy);
+  const handleViewBranchData = (branch) => {
+    setBranchData(branch);
     setIsViewing(true);
     setIsEditing(false);
     setIsCreating(false); 
@@ -208,43 +134,73 @@ const PharmacyManagement = () => {
     setIsEditing(false);
   };
 
-  const handleCreateNewPharmacy = () => {
-    setuserData(initialuserData()); 
+  const handleCreateNewBranch = () => {
+    setBranchData(initialBranchData()); 
     setIsCreating(true);
     setIsEditing(false);
     setIsViewing(false);
   };
 
+  const exportToCSV = () => {
+    return filteredResults.map(branch => ({
+      ID: branch._id,
+      Name: branch.name,
+      Mnemonic: branch.mnemonic,
+      Status: branch.status,
+      WorkingHours: JSON.stringify(branch.workingHours),
+      CreatedAt: new Date(branch.createdAt).toLocaleString(),
+    }));
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    autoTable(doc, {
+      head: [['ID', 'Name', 'Mnemonic', 'Status', 'Created At']],
+      body: filteredResults.map(branch => [
+        branch._id,
+        branch.name,
+        branch.mnemonic,
+        branch.status,
+        formatWorkingHours(branch.workingHours),
+        new Date(branch.createdAt).toLocaleString(),
+      ]),
+    });
+    doc.save("branch_data.pdf");
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = (filteredResults || []).slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+
   return (
     <div className="container p-2">
       {isViewing ? (
-        <ViewPharmacyDetail 
-          userData={userData} 
+        <ViewBranchDetail 
+          branchData={branchData} 
           brandColor={brandColor} 
           handleCancel={handleCancelView} 
         />
       ) : isEditing ? (
-        <UpdatePharmacyForm 
-          userData={userData} 
+        <UpdateBranchForm 
+          branchData={branchData} 
           setErrors={setErrors} 
           errors={errors} 
           brandColor={brandColor} 
-          isAdmin={isAdmin} 
           onCommit={(updatedData) => {
-            console.log("Updated Pharmacy Data:", updatedData);
+            console.log("Updated Branch Data:", updatedData);
             handleCancelEdit();
           }} 
           handleCancel={handleCancelEdit} 
         />
       ) : isCreating ? (
-        <CreateUser 
-          userData={userData} 
+        <CreateBranch 
+          branchData={branchData} 
           setErrors={setErrors} 
           errors={errors} 
           brandColor={brandColor} 
-          isAdmin={isAdmin} 
           onCommit={(newData) => {
-            console.log("Created New Pharmacy Data:", newData);
+            console.log("Created New Branch Data:", newData);
             handleCancelEdit(); 
           }} 
           handleCancel={() => setIsCreating(false)} 
@@ -253,7 +209,7 @@ const PharmacyManagement = () => {
         <>
           <div className="flex justify-between mb-2">
             <div className="relative w-2/3 max-w-xs">
-              <label htmlFor="search" className="sr-only">Search Pharmacy</label>
+              <label htmlFor="search" className="sr-only">Search Branch</label>
               <input
                 id="search"
                 type="search"
@@ -269,7 +225,7 @@ const PharmacyManagement = () => {
             </div>
 
             <div>
-              <CSVLink data={exportToCSV()} filename="user_data.csv" className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '5px 10px', borderRadius: '4px', textDecoration: 'none' }}>
+              <CSVLink data={exportToCSV()} filename="branch_data.csv" className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '5px 10px', borderRadius: '4px', textDecoration: 'none' }}>
                 Export to CSV
               </CSVLink>
               <button onClick={exportToPDF} className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '4px 10px', borderRadius: '4px' }}>
@@ -280,7 +236,7 @@ const PharmacyManagement = () => {
 
           <div className="flex justify-start mb-1">
             <button 
-              onClick={handleCreateNewPharmacy}
+              onClick={handleCreateNewBranch}
               className="btn"
               style={{
                 backgroundColor: brandColor,
@@ -288,16 +244,16 @@ const PharmacyManagement = () => {
                 padding: '5px 10px',
                 borderRadius: '4px',
               }}>
-              Create New User
+              Create New Branch
             </button>
           </div>
 
           {/* Table Section */}
-          <div className="mt-1">
+          <div className="mt-1 overflow-x-auto">
             <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
-                  {['Email', 'Name', 'Phone No', 'Status', 'Role', 'Created At'].map((field) => (
+                  {['ID', 'Name', 'Mnemonic', 'Status', 'Created At'].map((field) => (
                     <th
                       key={field}
                       onClick={() => handleSort(field)}
@@ -316,27 +272,26 @@ const PharmacyManagement = () => {
               </thead>
               <tbody>
                 {currentItems.length > 0 ? (
-                  currentItems.map((pharmacy) => (
-                    <tr key={pharmacy._id} className="hover:bg-gray-100 transition duration-300">
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.email}</td>
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.fullName}</td>
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.phone}</td>
-                      <td className={`py-3 px-4 border-b border-gray-200 text-sm ${pharmacy.status === 'Active' ? 'text-green-500' : 'text-red-500'}`}>
-                        {pharmacy.status}
+                  currentItems.map((branch) => (
+                    <tr key={branch._id} className="hover:bg-gray-100 transition duration-300">
+                      <td className="py-1 px-4 border-b border-gray-200 text-sm">{branch._id}</td>
+                      <td className="py-1 px-4 border-b border-gray-200 text-sm">{branch.name}</td>
+                      <td className="py-1 px-4 border-b border-gray-200 text-sm">{branch.mnemonic}</td>
+                      <td className={`py-1 px-4 border-b border-gray-200 text-sm ${branch.status === 'Open' ? 'text-green-500' : 'text-red-500'}`}>
+                        {branch.status}
                       </td>
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.role}</td>
-                      <td className="px-3 py-4 border-b border-gray-200 text-sm">{new Date(pharmacy.createdAt).toLocaleString()}</td>
-                      <td className="px-2 border-b border-gray-200 text-sm">
+                      <td className="py-1 px-4 border-b border-gray-200 text-sm">{new Date(branch.createdAt).toLocaleString()}</td>
+                      <td className="px-1 py-1 border-b border-gray-200 text-sm">
                         <button
-                          onClick={() => handleEdituserData(pharmacy)}
+                          onClick={() => handleEditBranchData(branch)}
                           className="hover:text-blue-700 transition duration-200"
                         >
                           <FontAwesomeIcon icon={faPencilAlt} />
                         </button>
                       </td>
-                      <td className="px-2 border-b border-gray-200 text-sm">
+                      <td className="px-1 py-1 border-b border-gray-200 text-sm">
                         <button
-                          onClick={() => handleViewuserData(pharmacy)}
+                          onClick={() => handleViewBranchData(branch)}
                           className="custom-button transition hover:text-blue-700 duration-200 px-2 py-1 rounded"
                         >
                           <FontAwesomeIcon icon={faEye} />
@@ -346,7 +301,7 @@ const PharmacyManagement = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="text-center py-3">No users found.</td>
+                    <td colSpan="8" className="text-center py-2">No branches found.</td>
                   </tr>
                 )}
               </tbody>
@@ -367,8 +322,8 @@ const PharmacyManagement = () => {
               <button
                 key={index}
                 onClick={() => setCurrentPage(index + 1)}
-                className={`px-4 ${currentPage === index + 1 ? 'bg-gray-600 text-black' : 'bg-gray-100'} rounded-none`}
-                style={currentPage === index + 1 ? { backgroundColor: brandColor, color: 'white' } : {}}
+                className={`px-4 ${currentPage === index + 1 ? 'bg-gray-600 text-white' : 'bg-gray-100'} rounded-none`}
+                style={currentPage === index + 1 ? { backgroundColor: brandColor } : {}}
               >
                 {index + 1}
               </button>
@@ -382,20 +337,10 @@ const PharmacyManagement = () => {
               Next
             </button>
           </div>
-
-          {/* Modal for edit restriction */}
-          {isModalOpen && (
-            <Modal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              message={modalMessage}
-              brandColor={brandColor}
-            />
-          )}
         </>
       )}
     </div>
   );
 };
 
-export default PharmacyManagement;
+export default BranchManagement;

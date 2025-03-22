@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import PharmacyAPI from '../API/pharmacyApi';
@@ -34,7 +34,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
       { path: 'name', label: 'Pharmacy Name' },
       { path: 'logo', label: 'Logo' },
       { path: 'brandColor', label: 'Brand Color' },
-      { path: 'Address', label: 'Address' },
+      { path: 'street', label: 'Address' },
       { path: 'city', label: 'City' },
       { path: 'state', label: 'State' },
       { path: 'phone', label: 'Phone' },
@@ -43,7 +43,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
       { path: 'licenceDocument', label: 'License Document' },
       { path: 'licenseExpirationDate', label: 'License Expiration Date' },
     ];
-  
+
     const field = requiredFields.find((f) => f.path === fieldName);
     if (field) {
       if (!value || value.trim() === '') {
@@ -52,31 +52,31 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
         delete validationErrors[fieldName];
       }
     }
-  
+
     if (fieldName === 'name') {
       if (value.length < 3 || !/^[a-zA-Z\s]+$/.test(value)) {
         validationErrors.name = 'Invalid Name.';
       }
     }
-  
+
     if (fieldName === 'phone' && !PhoneRegex.test(value)) {
       validationErrors.phone = 'Invalid phone number format.';
     }
-  
+
     if (fieldName === 'email' && !EmailRegex.test(value)) {
       validationErrors.email = 'Invalid email format.';
     }
-  
+
     if (fieldName === 'licenseExpirationDate') {
       const expirationDate = new Date(value);
       const today = new Date();
       expirationDate.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0); 
+      today.setHours(0, 0, 0, 0);
       if (expirationDate <= today) {
         validationErrors.licenseExpirationDate = 'License has already expired. Please renew it before registration.';
-      } 
+      }
     }
-  
+
     setErrors(validationErrors);
   };
 
@@ -91,7 +91,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
   };
 
   const handleFileChange = (e, name) => {
-    const file = e.target.files[0]; 
+    const file = e.target.files[0];
 
     if (file) {
       const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -176,12 +176,12 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
   };
 
   const renderInputField = (label, name, value, type = 'text') => (
-    <div className="flex items-center space-x-2">
-      <label className="w-32 text-right ">{label}</label>
+    <div className="flex items-center space-x-2 mb-4">
+      <label className="w-32 text-right">{label}</label>
       <input
         type={type}
         name={name}
-        className={`flex-grow h-8 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
+        className={`flex-grow h-10 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
         value={value}
         onChange={handleInputChange}
         placeholder={label}
@@ -191,8 +191,8 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
   );
 
   const renderFileField = (label, name, documentUrl, accept) => (
-    <div className="flex items-center space-x-2 ">
-      <label className="w-32 text-right ">{label}</label>
+    <div className="flex items-center space-x-2 mb-4">
+      <label className="w-32 text-right">{label}</label>
       <div className="flex flex-col flex-grow">
         {name === 'logo' && localPharmacyData.logo && (
           <img
@@ -202,7 +202,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
           />
         )}
         {name === 'licenceDocument' && documentUrl && (
-          <div className="flex items-center mb-1 ">
+          <div className="flex items-center mb-1">
             <a href={documentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
               View License Document
             </a>
@@ -221,8 +221,8 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
   );
 
   const renderColorField = (label, name, value) => (
-    <div className="flex items-center space-x-2">
-      <label className="w-32 text-right ">{label}</label>
+    <div className="flex items-center space-x-2 mb-4">
+      <label className="w-32 text-right">{label}</label>
       <input
         type="color"
         name={name}
@@ -234,12 +234,12 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
   );
 
   const renderDateField = (label, name, value) => (
-    <div className="flex items-center space-x-2 ">
-      <label className="w-32 text-right ">{label}</label>
+    <div className="flex items-center space-x-2 mb-4">
+      <label className="w-32 text-right">{label}</label>
       <input
         type="date"
         name={name}
-        className={`flex-grow h-8 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
+        className={`flex-grow h-10 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
         value={value ? value.split('T')[0] : ''}
         onChange={handleInputChange}
       />
@@ -263,11 +263,8 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
     ];
 
     return (
-      <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto " style={{ maxHeight: '70vh' }}>
-
-
+      <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
         <div className="flex space-x-1 mb-5">
-       
           <button
             className="flex items-center text-white px-3 rounded transition duration-300 hover:shadow-lg"
             style={{ backgroundColor: brandColor }}
@@ -276,7 +273,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
             <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
           </button>
           <button
-            className="flex items-center text-white  px-5 rounded transition duration-300 hover:shadow-lg"
+            className="flex items-center text-white px-5 rounded transition duration-300 hover:shadow-lg"
             style={{ backgroundColor: brandColor }}
             onClick={handleClear}
           >
@@ -289,12 +286,9 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
           >
             Commit
           </button>
-          <h2 className="text-2xl mb-1 pl-10 font-bold" style={{ color: brandColor }}>
-          Create New Pharmacy
-        </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {fields.map((field) => {
             const value = localPharmacyData[field.name] || '';
             if (field.type === 'file') {

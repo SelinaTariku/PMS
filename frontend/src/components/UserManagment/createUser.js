@@ -24,6 +24,7 @@ const CreateUser = ({
   const [roles, setRoles] = useState([]);
   const [branches, setBranches] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
+  const userId = localStorage.getItem('id');
 
   useEffect(() => {
     setLocaluserData(userData || {});
@@ -194,7 +195,8 @@ const CreateUser = ({
     // Include pharmacy from localStorage if isAdmin is false
     if (!isAdmin) {
       const pharmacyId = localStorage.getItem('pharmacy');
-      changes.pharmacy = pharmacyId || ""; // Set to empty string if not found
+      changes.pharmacy = pharmacyId || "";
+      changes.changes = userId;
     }
 
     try {

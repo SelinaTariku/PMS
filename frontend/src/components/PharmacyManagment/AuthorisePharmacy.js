@@ -175,8 +175,8 @@ const AuthorisePharmacy = () => {
     <div className="container mx-auto p-2">
       {!isViewing && (
         <>
-          <div className="flex mb-2">
-            <div className="relative w-2/3 max-w-xs">
+          <div className="flex flex-col md:flex-row mb-2">
+            <div className="relative w-full md:w-2/3 max-w-xs">
               <label htmlFor="search" className="sr-only">Search Pharmacy</label>
               <input
                 id="search"
@@ -194,14 +194,14 @@ const AuthorisePharmacy = () => {
           </div>
 
           <div className="mt-2">
-            <div className="max-h-[300px]">
+            <div className="overflow-x-auto">
               {searchResults.length === 0 ? (
                 <p className="text-center text-gray-500">No unauthorized records available.</p>
               ) : (
-                <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                <table className="min-w-full bg-white shadow-md rounded-lg">
                   <thead className="bg-gray-100">
                     <tr>
-                      {['ID', 'Name', 'Phone No', 'Created At', 'Status' ].map((field) => (
+                      {['ID', 'Name', 'Phone No', 'Created At', 'Status'].map((field) => (
                         <th
                           key={field}
                           onClick={() => handleSort(field.toLowerCase())}
@@ -266,7 +266,7 @@ const AuthorisePharmacy = () => {
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className="px-4  rounded-r-lg"
+              className="px-4 rounded-r-lg"
               style={{ background: brandColor, color: "white" }}
             >
               Next

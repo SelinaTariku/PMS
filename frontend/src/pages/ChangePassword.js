@@ -33,7 +33,7 @@ const ChangePassword = () => {
     }
 
     if (newPassword && !validatePassword(newPassword)) {
-      errors.newPassword = "Password must contain at least one uppercase letter, one lowercase letter, one digit, one special character, and be at least 8 characters long.";
+      errors.newPassword = "Invalid Password Format";
     }
 
     if (newPassword && confirmPassword && newPassword !== confirmPassword) {
@@ -107,18 +107,18 @@ const ChangePassword = () => {
 
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 space-y-8">
-        <h2 className="text-center text-2xl font-bold text-gray-700">Change Password</h2>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+      <div className="w-full max-w-md p-4 space-y-8">
+        <h2 className="text-center text-2xl font-bold  text-blue-900">Change Password</h2>
+        <form className=" space-y-2" onSubmit={handleSubmit}>
           <div className="relative">
-            <label htmlFor="email" className="block text-left text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block text-left text-lg font-medium text-blue-900">Email</label>
             <div className="flex items-center border border-gray-300 rounded-md">
               <input
                 id="email"
                 name="email"
                 type="email"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Email"
                 value={email}
                 onChange={handleEmailChange}
@@ -128,14 +128,14 @@ const ChangePassword = () => {
           </div>
 
           <div className="relative">
-            <label htmlFor="currentPassword" className="block text-left text-sm font-medium text-gray-700">Current Password</label>
+            <label htmlFor="currentPassword" className="block text-left text-lg font-medium text-blue-900">Current Password</label>
             <div className="flex items-center border border-gray-300 rounded-md">
               <input
                 id="currentPassword"
                 name="currentPassword"
                 type={showCurrentPassword ? "text" : "password"}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Current Password"
                 value={currentPassword}
                 onChange={handleCurrentPasswordChange}
@@ -151,14 +151,14 @@ const ChangePassword = () => {
           </div>
 
           <div className="relative">
-            <label htmlFor="newPassword" className="block text-left text-sm font-medium text-gray-700">New Password</label>
+            <label htmlFor="newPassword" className="block text-left text-lg font-medium text-blue-900">New Password</label>
             <div className="flex items-center border border-gray-300 rounded-md">
               <input
                 id="newPassword"
                 name="newPassword"
                 type={showNewPassword ? "text" : "password"}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="New Password"
                 value={newPassword}
                 onChange={handleNewPasswordChange}
@@ -175,14 +175,14 @@ const ChangePassword = () => {
           </div>
 
           <div className="relative">
-            <label htmlFor="confirmPassword" className="block text-left text-sm font-medium text-gray-700">Confirm New Password</label>
+            <label htmlFor="confirmPassword" className="block text-left text-lg font-medium text-blue-900">Confirm New Password</label>
             <div className="flex items-center border border-gray-300 rounded-md">
               <input
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Confirm New Password"
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
@@ -201,19 +201,25 @@ const ChangePassword = () => {
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-900 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex justify-center py-1 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-900 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Change Password
             </button>
           </div>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-1 text-center">
           <button
             onClick={handleForgotPassword}
-            className="text-sm text-blue-500 hover:underline"
+            className="text-sm text-blue-900 hover:underline"
           >
-            Forgot Password?
+            Forgot Current Password?
+          </button>
+          <button
+            onClick={() => navigate('/PharmacSphere')}
+            className="text-sm text-blue-900 ml-20 hover:underline"
+          >
+            Back to Login
           </button>
         </div>
 

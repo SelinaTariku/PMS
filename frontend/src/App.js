@@ -11,16 +11,27 @@ import Contact from "./components/web/contact"
 import PharmacSphere from "./pages/web/webPages";
 import AuthRoute from "./components/AuthRoute";
 import ChangePassword from "./pages/ChangePassword";
+
 import PharmacyOverview from "./components/Dashboards/Pharmamcy/PharmacyOverview";
 import BranchOverview from "./components/Dashboards/Branch/branchOverview";
-import PharmacyManagement from "./components/PharmacyManagment/PharmacyManagement";
-import AutorisePharmacy from './components/PharmacyManagment/AuthorisePharmacy';
+
 import UserManagement from "./components/UserManagment/UserManagment";
 import SessionManager from "./components/SessionManager";
+
+import PharmacyManagement from "./components/PharmacyManagment/PharmacyManagement";
+import AutorisePharmacy from './components/PharmacyManagment/AuthorisePharmacy';
 import UnautorisedPharmacy from "./components/PharmacyManagment/UnautorisedPharmacy";
 import RejectedPharmacy from "./components/PharmacyManagment/RejectedPharmacy";
+
 import ManagePermission from "./components/ManageRolePermission/PermissionManagement"
 import ManageRole from "./components/ManageRolePermission/RoleManagement"
+
+import ManageBranch from "./components/branchManagement/BranchManagment"
+
+import ManagementProduct from "./components/ProductManagement/ProductManagement"
+import OrderManagement from "./components/OrderManagemetn/OrderManagement"
+
+
 const App = () => {
   return (
     <Router>
@@ -46,6 +57,10 @@ const App = () => {
             <Route path="AccountSetting/ManageUser" element={<AuthRoute><UserManagement /></AuthRoute>} />
             <Route path="AccountSetting/ManagePermission" element={<AuthRoute><ManagePermission /></AuthRoute>} />
             <Route path="AccountSetting/ManageRole" element={<AuthRoute><ManageRole /></AuthRoute>} />
+            <Route path="BranchManagement/ManageBranch" element={<AuthRoute><ManageBranch/></AuthRoute>}/>
+
+            <Route path="ProductManagement" element={<AuthRoute><ManagementProduct/></AuthRoute>}/>
+            <Route path="OrderManagement" element={<AuthRoute><OrderManagement/></AuthRoute>}/>
             
           </Route>
         </Routes>

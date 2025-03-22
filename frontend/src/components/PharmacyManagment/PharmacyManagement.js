@@ -39,7 +39,7 @@ const PharmacyManagement = () => {
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [searchValue, setSearchValue] = useState('');
-  const brandColor = localStorage.getItem('brandColor');
+  const brandColor = localStorage.getItem('brandColor') || '#1E467A'; // Default color
   const [errors, setErrors] = useState({});
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,9 +75,8 @@ const PharmacyManagement = () => {
         pharmacy._id.toLowerCase().includes(searchValue.toLowerCase()) ||
         pharmacy.name.toLowerCase().includes(searchValue.toLowerCase()) ||
         pharmacy.phone.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.status.toLowerCase().includes(searchValue.toLowerCase())||
+        pharmacy.status.toLowerCase().includes(searchValue.toLowerCase()) ||
         pharmacy.mnemonic.toLowerCase().includes(searchValue.toLowerCase())
-        
       );
       setFilteredResults(filtered);
     } else {
@@ -116,7 +115,7 @@ const PharmacyManagement = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["Pharmacy ID", "Pharmacy Name", "Phone Number", "Status","Created At"];
+    const tableColumn = ["Pharmacy ID", "Pharmacy Name", "Phone Number", "Status", "Created At"];
     const tableRows = [];
 
     filteredResults.forEach(pharmacy => {
@@ -197,13 +196,13 @@ const PharmacyManagement = () => {
         />
       ) : (
         <>
-          <div className="flex justify-between mb-2">
-            <div className="relative w-2/3 max-w-xs">
+          <div className="flex flex-col md:flex-row justify-between mb-2">
+            <div className="relative w-full md:w-2/3 max-w-xs">
               <label htmlFor="search" className="sr-only">Search Pharmacy</label>
               <input
                 id="search"
                 type="search"
-                className="h-8 p-2 border rounded pl-10 w-full"
+                className="h-10 p-2 border rounded pl-10 w-full"
                 placeholder="Search"
                 onChange={handleSearchInputChange}
               />
@@ -214,15 +213,23 @@ const PharmacyManagement = () => {
               />
             </div>
 
-            <div>
-              <CSVLink data={exportToCSV()} filename="pharmacy_data.csv" className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '4px 10px', borderRadius: '4px', textDecoration: 'none' }}>
+            <div className="flex mt-2 md:mt-0">
+              <CSVLink 
+                data={exportToCSV()} 
+                filename="pharmacy_data.csv" 
+                className="btn ml-2" 
+                style={{ backgroundColor: brandColor, color: 'white', padding: '4px 10px', borderRadius: '4px', textDecoration: 'none' }}
+              >
                 Export to CSV
               </CSVLink>
-              <button onClick={exportToPDF} className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '4px 10px', borderRadius: '4px' }}>
+              <button 
+                onClick={exportToPDF} 
+                className="btn ml-2" 
+                style={{ backgroundColor: brandColor, color: 'white', padding: '4px 10px', borderRadius: '4px' }}
+              >
                 Export to PDF
               </button>
             </div>
-            
           </div>
           <div className="flex justify-start mb-1">
             <button 
@@ -233,16 +240,17 @@ const PharmacyManagement = () => {
                 color: 'white',
                 padding: '4px 8px',
                 borderRadius: '4px',
-              }}>
+              }}
+            >
               Create New Pharmacy
             </button>
           </div>
           {/* Table Section */}
-          <div className="mt-1">
-            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="mt-1 overflow-x-auto">
+            <table className="min-w-full bg-white shadow-md rounded-lg">
               <thead className="bg-gray-100">
                 <tr>
-                  {['ID', 'Name','Mnemonic', 'Phone No', 'Created At','Status'].map((field) => (
+                  {['ID', 'Name', 'Mnemonic', 'Phone No', 'Created At', 'Status'].map((field) => (
                     <th
                       key={field}
                       onClick={() => handleSort(field)}
@@ -297,7 +305,7 @@ const PharmacyManagement = () => {
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-4  rounded-l-lg"
+              className="px-4 rounded-l-lg"
               style={{ background: brandColor, color: "white" }}
             >
               Previous
@@ -315,7 +323,7 @@ const PharmacyManagement = () => {
             <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-4  rounded-r-lg"
+              className="px-4 rounded-r-lg"
               style={{ background: brandColor, color: "white" }}
             >
               Next

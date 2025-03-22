@@ -21,7 +21,6 @@ const UpdatePharmacyForm = ({
   const [confirmCommit, setConfirmCommit] = useState(false);
 
   useEffect(() => {
-    console.log("Initializing form with existing pharmacy data:", pharmacyData);
     setLocalPharmacyData(pharmacyData || {});
     setErrors({});
   }, [pharmacyData]);
@@ -59,13 +58,10 @@ const UpdatePharmacyForm = ({
     }
 
     setErrors(validationErrors);
-    console.log("Current errors after validation:", validationErrors);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Field changed: ${name}, New Value: ${value}`);
-
     setLocalPharmacyData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -98,7 +94,6 @@ const UpdatePharmacyForm = ({
       }
 
       const fileUrl = URL.createObjectURL(file);
-      console.log(`File selected: ${name}, File URL: ${fileUrl}`);
       setLocalPharmacyData((prevData) => ({ ...prevData, [name]: fileUrl }));
       validateField(name, fileUrl);
     }
@@ -120,7 +115,6 @@ const UpdatePharmacyForm = ({
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      console.log("Validation errors detected:", validationErrors);
       return false;
     }
 
@@ -129,10 +123,8 @@ const UpdatePharmacyForm = ({
   };
 
   const handleCommit = () => {
-    console.log("Checking for changes before commit...");
     if (hasChanges()) {
       const isValid = validateFields();
-      console.log("Validation result:", isValid);
       if (isValid) {
         setConfirmCommit(true);
       }
@@ -158,7 +150,6 @@ const UpdatePharmacyForm = ({
     }
 
     try {
-      console.log("Submitting changes:", changes);
       const response = await PharmacyAPI.updatePharmacy(pharmacyData._id, changes);
 
       if (response.success) {
@@ -180,16 +171,14 @@ const UpdatePharmacyForm = ({
   const hasChanges = () => {
     for (const key in localPharmacyData) {
       if (localPharmacyData[key] !== pharmacyData[key]) {
-        console.log(`Change detected in field: ${key}`);
         return true;
       }
     }
-    console.log("No changes detected.");
     return false;
   };
 
   const renderInputField = (label, name, value, type = 'text') => (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 mb-4">
       <label className="w-32 text-right">{label}</label>
       <input
         type={type}
@@ -199,21 +188,19 @@ const UpdatePharmacyForm = ({
         onChange={handleInputChange}
         placeholder={label}
       />
-      {errors[name] && (
-        <span className="text-red-500 text-sm">{errors[name]}</span>
-      )}
+      {errors[name] && <span className="text-red-500 text-sm">{errors[name]}</span>}
     </div>
   );
 
   const renderFileField = (label, name, documentUrl, accept) => (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 mb-4">
       <label className="w-32 text-right">{label}</label>
       <div className="flex flex-col flex-grow">
         {name === 'logo' && localPharmacyData.logo && (
           <img
             src={localPharmacyData.logo}
             alt="Logo Preview"
-            className="mb-1 w-20 h-10 object-contain border border-gray-300 rounded"
+            className="mb-2 w-20 h-10 object-contain border border-gray-300 rounded"
           />
         )}
         {name === 'licenceDocument' && documentUrl && (
@@ -236,7 +223,7 @@ const UpdatePharmacyForm = ({
   );
 
   const renderColorField = (label, name, value) => (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 mb-4">
       <label className="w-32 text-right">{label}</label>
       <input
         type="color"
@@ -249,12 +236,12 @@ const UpdatePharmacyForm = ({
   );
 
   const renderDateField = (label, name, value) => (
-    <div className="flex items-center space-x-2 ">
+    <div className="flex items-center space-x-2 mb-4">
       <label className="w-32 text-right">{label}</label>
       <input
         type="date"
         name={name}
-        className={`flex-grow h-8 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
+        className={`flex-grow h-10 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
         value={value ? value.split('T')[0] : ''}
         onChange={handleInputChange}
       />
@@ -263,7 +250,7 @@ const UpdatePharmacyForm = ({
   );
 
   const renderSelectField = (label, name, value, options) => (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 mb-4">
       <label className="w-32 text-right">{label}</label>
       <select
         name={name}
@@ -275,9 +262,7 @@ const UpdatePharmacyForm = ({
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
-      {errors[name] && (
-        <span className="text-red-500 text-sm">{errors[name]}</span>
-      )}
+      {errors[name] && <span className="text-red-500">{errors[name]}</span>}
     </div>
   );
 
@@ -302,32 +287,28 @@ const UpdatePharmacyForm = ({
     ];
 
     return (
-      <div className="p-2 mb-5 pb-10 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
+      <div className="p-4 mb-5 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
         <div className="flex justify-between items-center mb-5">
-          <div className="flex space-x-3">
-            <button
-              className="flex items-center text-white px-2 rounded transition duration-300 hover:shadow-lg"
-              style={{ backgroundColor: brandColor }}
-              onClick={handleCancel}
-            >
-              <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-              <span className="ml-1"></span>
-            </button>
-            <button
-              onClick={handleCommit}
-              className="text-white py-1 px-2 rounded transition duration-200"
-              style={{ backgroundColor: brandColor }}
-            >
-              Commit
-            </button>
-            <h2 className="text-2xl pl-10 font-bold ml-2" style={{ color: brandColor }}>
-              Update {pharmacyData.name } Pharmacy
-            </h2>
-          </div>
-
+          <button
+            className="flex items-center text-white px-3 rounded transition duration-300 hover:shadow-lg"
+            style={{ backgroundColor: brandColor }}
+            onClick={handleCancel}
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
+          </button>
+          <h2 className="text-2xl font-bold" style={{ color: brandColor }}>
+            Update {pharmacyData.name} Pharmacy
+          </h2>
+          <button
+            onClick={handleCommit}
+            className="text-white py-1 px-3 rounded transition duration-200"
+            style={{ backgroundColor: brandColor }}
+          >
+            Commit
+          </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {fields.map((field) => {
             const value = localPharmacyData[field.name] || '';
             if (field.type === 'file') {

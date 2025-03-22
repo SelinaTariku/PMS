@@ -100,10 +100,10 @@ const fetchAllLiveByRole = async () => {
   }
 };
 
-const fetchAllLiveByPharmacy = async () => {
+const fetchAllLiveByPharmacy = async (pharmacyId) => {
   try {
     const response = await fetch(
-      `http://localhost:5000/users/getAllUSerByPharmacy/${pharmacy}`
+      `http://localhost:5000/users/getAllUSerByPharmacy/${pharmacyId}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch all pharmacies");
