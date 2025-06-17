@@ -1,150 +1,232 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import CreateRole from './CreateRole';
 
+const API_BASE_URL = 'http://localhost:5000';
+const REFRESH_INTERVAL = 2000;
+
+const CustomModal = ({ 
+  isOpen, 
+  onClose, 
+  message, 
+  title, 
+  onConfirm, 
+  brandColor = '#007bff' 
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
+          aria-label="Close"
+        >
+          <span className="text-2xl">&times;</span>
+        </button>
+        
+        <h2 className="text-xl font-bold mb-4" style={{ color: brandColor }}>
+          {title}
+        </h2>
+        
+        <p className="mb-6 text-gray-700">{message}</p>
+        
+        <div className="flex justify-end space-x-3">
+          {onConfirm && (
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            onClick={onConfirm || onClose}
+            className="px-4 py-2 rounded-md text-white hover:opacity-90 transition"
+            style={{ backgroundColor: brandColor }}
+          >
+            {onConfirm ? 'Confirm' : 'Close'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RoleManagement = () => {
+  const brandColor = localStorage.getItem('brandColor') || '#007bff';
+  const userId = localStorage.getItem('id');
+  const userRole = localStorage.getItem('role');
+  
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [roleDetails, setRoleDetails] = useState({});
+  const [selectedRoleId, setSelectedRoleId] = useState(null);
+  const [selectedRoleDetails, setSelectedRoleDetails] = useState({});
   const [rolePermissions, setRolePermissions] = useState([]);
   const [originalPermissions, setOriginalPermissions] = useState([]);
   const [createdByEmail, setCreatedByEmail] = useState('');
   const [updatedByEmail, setUpdatedByEmail] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [showCreateRole, setShowCreateRole] = useState(false); 
-  const brandColor = localStorage.getItem('brandColor') || '#007bff';
   const [isAdmin, setIsAdmin] = useState(false);
-  const Userrole = localStorage.getItem('role');
+  const [modal, setModal] = useState({
+    show: false,
+    type: '',
+    message: '',
+    onConfirm: null
+  });
+  const [showCreateRole, setShowCreateRole] = useState(false);
 
-  const fetchRoles = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/role/getRoleById/${Userrole}`);
-      const userrole = response.data.name;
-
-      if (userrole === 'Admin') {
-        setIsAdmin(true);
-        const rolesResponse = await axios.get('http://localhost:5000/role/getAllRoleForAdmin');
-        setRoles(rolesResponse.data);
-      } else {
-        const rolesResponse = await axios.get('http://localhost:5000/role/getAllRoleForManager');
-        setRoles(rolesResponse.data);
-      }
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-    }
-  };
-
-  const fetchPermissions = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/role/getRoleById/${Userrole}`);
-      const userrole = response.data.name;
-
-      if (userrole === 'Admin') {
-        const permissionsResponse = await axios.get('http://localhost:5000/pages/getAllPageForAdmin');
-        setPermissions(permissionsResponse.data);
-      } else {
-        const permissionsResponse = await axios.get('http://localhost:5000/pages/getAllPageForManager');
-        setPermissions(permissionsResponse.data);
-      }
-    } catch (error) {
-      console.error('Error fetching permissions:', error);
-    }
-  };
-
-  const fetchUserEmail = async (userId) => {
+  const fetchUserEmail = useCallback(async (userId) => {
     try {
       const response = await axios.get(`http://localhost:5000/users/getUserById/${userId}`);
       return response.data.email;
     } catch (error) {
       console.error('Error fetching user email:', error);
-      return '';
+      return 'Unknown';
     }
-  };
+  }, []);
+
+  const fetchRoles = useCallback(async () => {
+    try {
+
+      const response = await axios.get('http://localhost:5000/role/getAllRoles');
+      setRoles(response.data);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  })
+
+  const fetchPermissions = useCallback(async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/pages/getAllPages`);
+      setPermissions(response.data);
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
+    }
+  });
+
+  const loadSelectedRoleDetails = useCallback(async (roleId) => {
+    try {
+      const role = roles.find(r => r._id === roleId);
+      if (!role) return;
+
+      setSelectedRoleDetails(role);
+      const currentPermissions = role.permissions?.map(perm => perm.page) || [];
+      setRolePermissions(currentPermissions);
+      setOriginalPermissions([...currentPermissions]);
+
+      const [creatorEmail, updaterEmail] = await Promise.all([
+        fetchUserEmail(role.createdBy),
+        fetchUserEmail(role.updatedBy)
+      ]);
+      
+      setCreatedByEmail(creatorEmail);
+      setUpdatedByEmail(updaterEmail);
+    } catch (error) {
+      console.error('Error loading role details:', error);
+    }
+  }, [roles, fetchUserEmail]);
 
   const handleRoleSelect = async (e) => {
-    const selectedId = e.target.value;
-    setSelectedRole(selectedId);
-    if (selectedId) {
-      const selectedRole = roles.find(role => role._id === selectedId);
-      setRoleDetails(selectedRole);
-      
-      const currentPermissions = selectedRole.permissions ? selectedRole.permissions.map(perm => perm.page) : [];
-      setRolePermissions(currentPermissions);
-      setOriginalPermissions(currentPermissions.slice());
-
-      const createdByEmail = await fetchUserEmail(selectedRole.createdBy);
-      const updatedByEmail = await fetchUserEmail(selectedRole.updatedBy);
-      setCreatedByEmail(createdByEmail);
-      setUpdatedByEmail(updatedByEmail);
+    const roleId = e.target.value;
+    setSelectedRoleId(roleId);
+    if (roleId) {
+      await loadSelectedRoleDetails(roleId);
     } else {
-      setRolePermissions([]);
-      setRoleDetails({});
-      setCreatedByEmail('');
-      setUpdatedByEmail('');
-      setOriginalPermissions([]);
+      resetSelectedRole();
     }
   };
 
-  const handlePermissionChange = (e) => {
-    const { value, checked } = e.target;
-    if (checked) {
-      setRolePermissions((prev) => [...prev, value]);
-    } else {
-      setRolePermissions((prev) => prev.filter((permission) => permission !== value));
-    }
+  const handlePermissionChange = (permissionId, isChecked) => {
+    setRolePermissions(prev => 
+      isChecked 
+        ? [...prev, permissionId]
+        : prev.filter(id => id !== permissionId)
+    );
   };
 
   const handleSavePermissions = () => {
-    if (!selectedRole) {
-      setModalMessage('Please select a role to save permissions.');
-      setModalOpen(true);
+    if (!selectedRoleId) {
+      setModal({
+        show: true,
+        type: 'info',
+        message: 'Please select a role to save permissions.',
+        onConfirm: null
+      });
       return;
     }
 
     if (JSON.stringify(rolePermissions) === JSON.stringify(originalPermissions)) {
-      setModalMessage('No changes detected.');
-      setModalOpen(true);
+      setModal({
+        show: true,
+        type: 'info',
+        message: 'No changes detected.',
+        onConfirm: null
+      });
       return;
     }
     
-    setConfirmModalOpen(true);
+    setModal({
+      show: true,
+      type: 'confirm',
+      message: 'Are you sure you want to change role permissions?',
+      onConfirm: confirmSavePermissions
+    });
   };
 
-  const handleConfirmSave = async () => {
-    setConfirmModalOpen(false);
-    const requestBody = {
-      permissions: rolePermissions.map(permission => ({ page: permission })), 
-      updatedBy: localStorage.getItem('id'),
-    };
-
+  const confirmSavePermissions = async () => {
     try {
-      const response = await axios.put(`http://localhost:5000/role/updateRole/${selectedRole}`, requestBody);
-      console.log("Update Response: ", response);
-      setModalMessage('Permissions updated successfully.');
-      setModalOpen(true);
+      const requestBody = {
+        permissions: rolePermissions.map(page => ({ page })),
+        updatedBy: userId
+      };
+
+      await axios.put(`${API_BASE_URL}/role/updateRole/${selectedRoleId}`, requestBody);
+      await loadSelectedRoleDetails(selectedRoleId);
+      
+      setModal({
+        show: true,
+        type: 'info',
+        message: 'Permissions updated successfully.',
+        onConfirm: null
+      });
     } catch (error) {
       console.error('Error updating permissions:', error);
-      setModalMessage('Failed to update permissions.');
-      setModalOpen(true);
+      setModal({
+        show: true,
+        type: 'info',
+        message: 'Failed to update permissions.',
+        onConfirm: null
+      });
     }
   };
 
   const handleCreateNewRole = () => {
-    setShowCreateRole(true); 
+    setShowCreateRole(true);
+    resetSelectedRole();
   };
 
   const handleRoleCreated = () => {
-    fetchRoles(); 
-    setModalMessage('Role created successfully.');
-    setModalOpen(true);
-    setShowCreateRole(false); 
+    fetchRoles();
+    setModal({
+      show: true,
+      type: 'info',
+      message: 'Role created successfully.',
+      onConfirm: null
+    });
+    setShowCreateRole(false);
   };
 
   const handleBackToRoleManagement = () => {
-    setShowCreateRole(false); 
+    setShowCreateRole(false);
+  };
+
+  const resetSelectedRole = () => {
+    setSelectedRoleDetails({});
+    setRolePermissions([]);
+    setOriginalPermissions([]);
+    setCreatedByEmail('');
+    setUpdatedByEmail('');
   };
 
   useEffect(() => {
@@ -153,184 +235,196 @@ const RoleManagement = () => {
     const interval = setInterval(() => {
       fetchRoles();
       fetchPermissions();
-    }, 2000);
-
+    }, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchRoles, fetchPermissions]);
 
-  const CustomModal = ({ isOpen, onClose, message, title, onConfirm }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full flex flex-col items-center relative">
-          <button
-            onClick={onClose}
-            className="absolute top-0 right-0 bg-red-500 text-white text-2xl font-bold w-12 h-8 flex items-center justify-center hover:bg-red-700 transition"
-            aria-label="Close"
-            style={{ margin: 0 }} 
-          >
-            &times; 
-          </button>
-          <h2 className="text-lg font-bold mb-2" style={{ color: brandColor }}>{title}</h2>
-          <p className="text-center mb-4" style={{ color: brandColor }}>{message}</p>
-          <div className="flex space-x-2">
-            {onConfirm ? (
-              <>
-                <button
-                  onClick={() => {
-                    handleConfirmSave(); 
-                    onClose();
-                  }}
-                  className="text-white py-2 px-4 rounded"
-                  style={{ backgroundColor: brandColor }}
-                >
-                  OK
-                </button>
-                <button
-                  onClick={onClose}
-                  className="text-white py-2 px-4 rounded"
-                  style={{ backgroundColor: brandColor }}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={onClose}
-                className="text-white py-2 px-4 rounded"
-                style={{ backgroundColor: brandColor }}
+  const renderRoleDetailsTable = () => (
+    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            {['Name', 'Created By', 'Created At', 'Updated By', 'Updated At', 'Level'].map((header) => (
+              <th 
+                key={header}
+                scope="col" 
+                className="px-4 py-1 text-left text-xs font-medium uppercase tracking-wider"
+                style={{ color: brandColor }}
               >
-                Close
-              </button>
-            )}
-          </div>
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          <tr>
+            <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-900">
+              {selectedRoleDetails.name}
+            </td>
+            <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-500">
+              {createdByEmail}
+            </td>
+            <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-500">
+              {new Date(selectedRoleDetails.createdAt).toLocaleString()}
+            </td>
+            <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-500">
+              {updatedByEmail}
+            </td>
+            <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-500">
+              {new Date(selectedRoleDetails.updatedAt).toLocaleString()}
+            </td>
+            <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-500">
+              {selectedRoleDetails.level}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderPermissionsList = () => (
+    <div className="space-y-1">
+      <h3 className="text-lg font-semibold" style={{ color: brandColor }}>
+        Permissions
+      </h3>
+      
+      <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {permissions.map(permission => {
+            const isChecked = rolePermissions.includes(permission._id);
+            return (
+              <div key={permission._id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`perm-${permission._id}`}
+                  checked={isChecked}
+                  onChange={(e) => handlePermissionChange(permission._id, e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 focus:ring-2"
+                  style={{ borderColor: brandColor, focusRingColor: brandColor }}
+                />
+                <label 
+                  htmlFor={`perm-${permission._id}`} 
+                  className="ml-2 text-sm text-gray-700"
+                >
+                  {permission.name}
+                </label>
+              </div>
+            );
+          })}
         </div>
       </div>
-    );
-  };
+      
+      <button
+        onClick={handleSavePermissions}
+        className="w-full md:w-auto px-4 py-1 rounded-md text-white hover:opacity-90 transition"
+        style={{ backgroundColor: brandColor }}
+      >
+        Save Permissions
+      </button>
+    </div>
+  );
+
+  const renderRoleSelection = () => (
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+      <div className="flex items-center w-full md:w-auto">
+        <label 
+          htmlFor="role-select"
+          className="mr-2 text-sm font-medium"
+          style={{ color: brandColor }}
+        >
+          Select Role
+        </label>
+        <select
+          id="role-select"
+          value={selectedRoleId || ''}
+          onChange={handleRoleSelect}
+          className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 py-1 pl-3 pr-10 border"
+          style={{ borderColor: brandColor }}
+        >
+          <option value="">Select Role</option>
+          {roles.map(role => (
+            <option key={role._id} value={role._id}>
+              {role.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      {isAdmin && (
+        <button
+          onClick={handleCreateNewRole}
+          className="px-4 py-1 rounded-md text-white hover:opacity-90 transition"
+          style={{ backgroundColor: brandColor }}
+        >
+          Create New Role
+        </button>
+      )}
+    </div>
+  );
+
+  const renderCreateRoleView = () => (
+    <div className="space-y-4">
+      <div className="flex items-center">
+        <button
+          onClick={handleBackToRoleManagement}
+          className="mr-2 p-1 rounded-full hover:bg-gray-100 transition"
+          aria-label="Back to role management"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-6 w-6" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+            style={{ color: brandColor }}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <h3 className="text-xl font-semibold" style={{ color: brandColor }}>
+          Create New Role
+        </h3>
+      </div>
+      
+      <CreateRole 
+        permissions={permissions} 
+        onRoleCreated={handleRoleCreated} 
+        brandColor={brandColor} 
+      />
+    </div>
+  );
 
   return (
-    <div className="container p-2 mx-auto max-w-7xl">
-      {showCreateRole ? (
-        <>
-          <div className="flex items-center mb-2">
-            <button
-              onClick={handleBackToRoleManagement}
-              className="text-white mr-2 px-2 text-2xl"
-              style={{ background: brandColor, border: 'none' }}
-            >
-              ←
-            </button>
-            <h3 className="text-xl mb-2" style={{ color: brandColor }}>Create New Role</h3>
-          </div>
-          <CreateRole 
-            permissions={permissions} 
-            onRoleCreated={handleRoleCreated} 
-            brandColor={brandColor} 
-          />
-        </>
-      ) : (
-        <>
-          <h2 className="text-2xl font-bold mb-1" style={{ color: brandColor }}>Role Management</h2>
-
-          <div className="mb-2 flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center mb-2 md:mb-0">
-              <p className="text-x mr-2 font-semibold" style={{ color: brandColor }}>Select Role</p>
-              <select
-                value={selectedRole || ''}
-                onChange={handleRoleSelect}
-                className="border rounded py-1 px-2 w-full md:w-80"
-              >
-                <option value="">Select Role</option>
-                {roles.map(role => (
-                  <option key={role._id} value={role._id}>{role.name}</option>
-                ))}
-              </select>
-            </div>
-            {isAdmin && (
-              <button
-                onClick={handleCreateNewRole}
-                className="mt-2 md:mt-0 bg-blue-500 text-white px-4 py-1 rounded"
-                style={{ backgroundColor: brandColor }}
-              >
-                Create New Role
-              </button>
-            )}
-          </div>
-
-          {selectedRole && (
-            <div className="mb-2 overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-1" style={{ color: brandColor }}>Name</th>
-                    <th className="border border-gray-300 px-4 py-1" style={{ color: brandColor }}>Created By</th>
-                    <th className="border border-gray-300 px-4 py-1" style={{ color: brandColor }}>Created At</th>
-                    <th className="border border-gray-300 px-4 py-1" style={{ color: brandColor }}>Updated By</th>
-                    <th className="border border-gray-300 px-4 py-1" style={{ color: brandColor }}>Updated At</th>
-                    <th className="border border-gray-300 px-4 py-1" style={{ color: brandColor }}>Level</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-1 text-sm">{roleDetails.name}</td>
-                    <td className="border border-gray-300 px-4 py-1 text-sm">{createdByEmail}</td>
-                    <td className="border border-gray-300 px-4 py-1 text-sm">{new Date(roleDetails.createdAt).toLocaleString()}</td>
-                    <td className="border border-gray-300 px-4 py-1 text-sm">{updatedByEmail}</td>
-                    <td className="border border-gray-300 px-4 py-1 text-sm">{new Date(roleDetails.updatedAt).toLocaleString()}</td>
-                    <td className="border border-gray-300 px-4 py-1 text-sm">{roleDetails.level}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {selectedRole && (
-            <div>
-              <h3 className="text-xl mb-1" style={{color: brandColor}}>Permissions:</h3>
-              <div className="max-h-40 overflow-y-auto border p-2 mb-2">
-                {permissions.map(permission => {
-                  const isChecked = rolePermissions.includes(permission._id);
-                  return (
-                    <div key={permission._id} className="flex items-center py-2">
-                      <input
-                        type="checkbox"
-                        value={permission._id}
-                        checked={isChecked}
-                        onChange={handlePermissionChange}
-                        className="mr-2"
-                      />
-                      <label className="text-sm">{permission.name}</label>
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                onClick={handleSavePermissions}
-                className="text-white px-4 py-1 rounded mt-1 w-full md:w-auto"
-                style={{ background: brandColor }}
-              >
-                Save Permissions
-              </button>
-            </div>
-          )}
-        </>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      {/* Only show title when not in create role mode */}
+      {!showCreateRole && (
+        <h1 className="text-2xl font-bold mb-1" style={{ color: brandColor }}>
+          Role Management
+        </h1>
       )}
-
+      
+      {showCreateRole ? (
+        renderCreateRoleView()
+      ) : (
+        <div className="space-y-3">
+          {renderRoleSelection()}
+          
+          {selectedRoleId && (
+            <>
+              {renderRoleDetailsTable()}
+              {renderPermissionsList()}
+            </>
+          )}
+        </div>
+      )}
+      
       <CustomModal
-        isOpen={confirmModalOpen}
-        onClose={() => setConfirmModalOpen(false)}
-        message="Are you sure you want to change role permissions?"
-        title="Confirmation"
-        onConfirm={handleConfirmSave} 
-      />
-
-      <CustomModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        message={modalMessage}
-        title="Notification"
+        isOpen={modal.show}
+        onClose={() => setModal({ ...modal, show: false })}
+        message={modal.message}
+        title={modal.type === 'confirm' ? 'Confirmation' : 'Notification'}
+        onConfirm={modal.onConfirm}
+        brandColor={brandColor}
       />
     </div>
   );

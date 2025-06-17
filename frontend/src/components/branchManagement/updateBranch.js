@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft } from "react-icons/fa";
 import BranchAPI from '../API/branchAPI';
 import Modal from '../Modal';
 import axios from 'axios';
@@ -290,19 +290,19 @@ const UpdateBranch = ({
     ];
 
     return (
-      <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto">
+      <div className="container max-h-80 min-h-80 mb-10 p-4">
         <h2 className="text-2xl font-bold ml-2 mb-3" style={{ color: brandColor }}>
           Update Branch
         </h2>
         <div className="flex justify-left items-center mb-4">
-          <button
-            className="flex items-center text-white px-3 py-2 rounded transition duration-300 hover:shadow-lg"
-            style={{ backgroundColor: brandColor }}
-            onClick={handleCancel}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="ml-1"></span>
-          </button>
+           <button
+          className="p-2 rounded-full shadow hover:opacity-90 transition"
+          style={{ backgroundColor: brandColor }}
+          onClick={handleCancel}
+          aria-label="Go back"
+        >
+          <FaArrowLeft className="text-white" />
+        </button>
 
           <button
             onClick={handleCommit}

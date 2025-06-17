@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft, FaSpinner } from "react-icons/fa";
 import PharmacyAPI from '../API/userApi';
 import Modal from '../Modal';
 import axios from 'axios';
@@ -25,6 +25,7 @@ const CreateUser = ({
   const [branches, setBranches] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
   const userId = localStorage.getItem('id');
+  const currentRole= localStorage.getItem('role')
 
   useEffect(() => {
     setLocaluserData(userData || {});
@@ -34,8 +35,15 @@ const CreateUser = ({
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/role/getAllRoles');
+        if(currentRole =='67cbe327916a31447870fc34'){
+          const response = await axios.get('http://localhost:5000/role/getAllRoleForAdmin');
         setRoles(response.data);
+        }
+        else{
+          const response = await axios.get('http://localhost:5000/role/getAllRoleForManager');
+          setRoles(response.data);
+        }
+       
       } catch (error) {
         console.error("Error fetching roles:", error);
       }
@@ -90,12 +98,14 @@ const CreateUser = ({
     }
 
     const requiredFields = [
+      { path: 'fullName', label: 'Full Name' },
       { path: 'status', label: 'Status' },
       { path: 'street', label: 'Street' },
       { path: 'city', label: 'City' },
       { path: 'state', label: 'State' },
       { path: 'phone', label: 'Phone' },
       { path: 'role', label: 'Role' },
+      { path: 'email', label: 'Email' },
     ];
 
     if (!isAdmin) {
@@ -192,7 +202,6 @@ const CreateUser = ({
       return;
     }
 
-    // Include pharmacy from localStorage if isAdmin is false
     if (!isAdmin) {
       const pharmacyId = localStorage.getItem('pharmacy');
       changes.pharmacy = pharmacyId || "";
@@ -237,44 +246,62 @@ const CreateUser = ({
     setErrors({}); 
   };
 
-  const renderInputField = (label, name, value, type = 'text') => (
-    <div className="flex items-center space-x-2 ">
-      <label className="w-32 text-right ">{label}</label>
-      <input
-        type={type}
-        name={name}
-        className={`flex-grow h-10 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
-        value={value}
-        onChange={handleInputChange}
-        placeholder={label}
-      />
-      {errors[name] && (
-        <span className="text-red-500 text-sm">{errors[name]}</span>
-      )}
-    </div>
-  );
+  const isFieldRequired = (fieldName) => {
+    const requiredFields = [
+      'fullName', 'status', 'street', 'city',
+      'state', 'phone', 'email', 'role'
+    ];
+    return requiredFields.includes(fieldName);
+  };
 
-  const renderSelectField = (label, name, value, options) => (
-    <div className="flex items-center space-x-2">
-      <label className="w-32 text-right">{label}</label>
-      <select
-        name={name}
-        className={`flex-grow h-10 p-2 border rounded-full shadow-sm focus:outline-none focus:ring-2 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
-        value={value}
-        onChange={handleInputChange}
-      >
-        <option value="">Select one</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {errors[name] && (
-        <span className="text-red-500 text-sm">{errors[name]}</span>
-      )}
-    </div>
-  );
+  const renderInputField = (label, name, value, type = 'text') => {
+    const required = isFieldRequired(name);
+    const labelWithAsterisk = required ? `${label} *` : label;
+
+    return (
+      <div className="flex items-center space-x-2 ">
+        <label className="w-32 text-right ">{labelWithAsterisk}</label>
+        <input
+          type={type}
+          name={name}
+          className={`flex-grow h-10 p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
+          value={value}
+          onChange={handleInputChange}
+          placeholder={label}
+        />
+        {errors[name] && (
+          <span className="text-red-500 text-sm">{errors[name]}</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderSelectField = (label, name, value, options) => {
+    const required = isFieldRequired(name);
+    const labelWithAsterisk = required ? `${label} *` : label;
+
+    return (
+      <div className="flex items-center space-x-2">
+        <label className="w-32 text-right">{labelWithAsterisk}</label>
+        <select
+          name={name}
+          className={`flex-grow h-10 p-2 border rounded-full shadow-sm focus:outline-none focus:ring-2 transition duration-200 ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
+          value={value}
+          onChange={handleInputChange}
+        >
+          <option value="">Select one</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors[name] && (
+          <span className="text-red-500 text-sm">{errors[name]}</span>
+        )}
+      </div>
+    );
+  };
 
   const renderFields = () => {
     const fields = [
@@ -287,17 +314,17 @@ const CreateUser = ({
         type: 'select', 
         options: branches.map(branch => ({
           value: branch._id,
-          label: `${branch.name} (${branch.mnemonic})`
+          label: `${branch.name}`
         })) 
       }]),
       { 
         label: 'Role', 
         name: 'role', 
         type: 'select', 
-        options: roles.filter(role => isAdmin ? role.level === 'Admin' : role.level === 'Pharmacy').map(role => ({ 
+        options: roles.map(role => ({
           value: role._id,
-          label: role.name 
-        })) 
+          label: role.name
+        }))
       },
       {
         label: 'Status', 
@@ -325,17 +352,17 @@ const CreateUser = ({
     return (
       <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
         <h2 className="text-2xl font-bold ml-2 mb-3" style={{ color: brandColor }}>
-          Update User
+          Create User
         </h2>
         <div className="flex justify-left items-center mb-4">
-          <button
-            className="flex items-center text-white px-3 py-2 rounded transition duration-300 hover:shadow-lg"
-            style={{ backgroundColor: brandColor }}
-            onClick={handleCancel}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="ml-1"></span>
-          </button>
+           <button
+          className="p-2 rounded-full shadow hover:opacity-90 transition"
+          style={{ backgroundColor: brandColor }}
+          onClick={handleCancel}
+          aria-label="Go back"
+        >
+          <FaArrowLeft className="text-white" />
+        </button>
           <button
             onClick={handleClear}
             className="text-white px-4 py-1 ml-2 rounded transition duration-200"

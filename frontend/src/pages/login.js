@@ -26,18 +26,24 @@ const Login = () => {
         const filteredUsername = `${nameParts[0]} ${nameParts[1] || ""}`.trim();
 
         const pharmacyResponse = await axios.get(`http://localhost:5000/pharmacies/getPharmacyById/${pharmacy}`);
-
+       
         localStorage.setItem("token", response.data.sessionToken);
         localStorage.setItem("userName", filteredUsername);
         localStorage.setItem("pharmacy", pharmacy);
         localStorage.setItem("branches", branches);
+        
         localStorage.setItem("id", _id);
         localStorage.setItem("branches", branches);
         localStorage.setItem("role", role);
         localStorage.setItem("PharmacyName", pharmacyResponse.data.name);
         localStorage.setItem("PharmacyLogo", pharmacyResponse.data.logo);
+        localStorage.setItem("tin", pharmacyResponse.data.TIN);
+        localStorage.setItem("phone", pharmacyResponse.data.phone);
         localStorage.setItem("brandColor", pharmacyResponse.data.brandColor);
-
+        localStorage.setItem("address", pharmacyResponse.data.city + " "+pharmacyResponse.data.state + " "+pharmacyResponse.data.street);
+        localStorage.setItem("expiredDate",pharmacyResponse.data.licenseExpirationDate);
+        console.log("TIN Number ", localStorage.getItem('tin'))
+        console.log("Full Address ", localStorage.getItem('address'))
         const currentDate = new Date();
         const changeDate = new Date(passwordChangeDate);
         currentDate.setHours(0, 0, 0, 0);
@@ -53,11 +59,10 @@ const Login = () => {
             navigate("/PharmacSphere/ChangePassword");
           }
         } else if (reSeted === false) {
-          if (pharmacyResponse.data.status === "Active") {
-            navigate("/PharmacSphere/Portal");
-          } else {
-            setError(pharmacyResponse.data.message || "Your Pharmacy is no longer available.");
-          }
+        
+          navigate("/PharmacSphere/Portal");
+          const branchDetail = await axios.get(`http://localhost:5000/branches/getBranchById/${branches}`)
+          localStorage.setItem("branchesName", branchDetail.data.name);
         } else {
           navigate("/PharmacSphere/ChangePassword");
         }
@@ -133,6 +138,7 @@ const Login = () => {
                 Login
               </button>
             </div>
+            
             <div className="text-center">
               <a
                 className="text-blue-600 hover:underline"

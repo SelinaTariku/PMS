@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft, FaSpinner } from "react-icons/fa";
 import PharmacyAPI from '../API/pharmacyApi';
 import Modal from '../Modal';
 
@@ -290,11 +290,12 @@ const UpdatePharmacyForm = ({
       <div className="p-4 mb-5 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
         <div className="flex justify-between items-center mb-5">
           <button
-            className="flex items-center text-white px-3 rounded transition duration-300 hover:shadow-lg"
+            className="p-2 rounded-full shadow hover:opacity-90 transition"
             style={{ backgroundColor: brandColor }}
             onClick={handleCancel}
+            aria-label="Go back"
           >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
+            <FaArrowLeft className="text-white" />
           </button>
           <h2 className="text-2xl font-bold" style={{ color: brandColor }}>
             Update {pharmacyData.name} Pharmacy

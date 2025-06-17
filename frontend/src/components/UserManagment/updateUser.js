@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft, FaSpinner } from "react-icons/fa";
 import PharmacyAPI from '../API/userApi';
 import Modal from '../Modal';
 import axios from 'axios';
@@ -24,7 +24,7 @@ const UpdateUser = ({
   const [roles, setRoles] = useState([]);
   const [branches, setBranches] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
-
+  const currentRole = localStorage.getItem('role')
   useEffect(() => {
     console.log("Initializing form with existing pharmacy data:", userData);
     setLocaluserData(userData || {});
@@ -34,8 +34,15 @@ const UpdateUser = ({
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/role/getAllRoles');
-        setRoles(response.data);
+        if (currentRole == '67cbe327916a31447870fc34') {
+          const response = await axios.get('http://localhost:5000/role/getAllRoleForAdmin');
+          setRoles(response.data);
+        }
+        else {
+          const response = await axios.get('http://localhost:5000/role/getAllRoleForManager');
+          setRoles(response.data);
+        }
+
       } catch (error) {
         console.error("Error fetching roles:", error);
       }
@@ -78,8 +85,8 @@ const UpdateUser = ({
     if (fieldName === 'fullName') {
       const fullNameParts = value.trim().split(' ');
       if (fullNameParts.length < 2 ||
-          fullNameParts[0].length < 3 || !/^[a-zA-Z]+$/.test(fullNameParts[0]) ||
-          fullNameParts[1].length < 3 || !/^[a-zA-Z]+$/.test(fullNameParts[1])) {
+        fullNameParts[0].length < 3 || !/^[a-zA-Z]+$/.test(fullNameParts[0]) ||
+        fullNameParts[1].length < 3 || !/^[a-zA-Z]+$/.test(fullNameParts[1])) {
         validationErrors[fieldName] = 'Invalid Name';
       } else {
         delete validationErrors[fieldName];
@@ -276,27 +283,27 @@ const UpdateUser = ({
       { label: 'Email', name: 'email', type: 'email' },
       { label: 'Phone', name: 'phone', type: 'text' },
       ...(isAdmin ? [] : [{
-        label: 'Branch', 
-        name: 'branchId', 
-        type: 'select', 
+        label: 'Branch',
+        name: 'branchId',
+        type: 'select',
         options: branches.map(branch => ({
           value: branch._id, // Use the ID for the value
           label: `${branch.name} (${branch.mnemonic})`
-        })) 
+        }))
       }]),
-      { 
-        label: 'Role', 
-        name: 'role', 
-        type: 'select', 
-        options: roles.filter(role => isAdmin ? role.level === 'Admin' : role.level === 'Pharmacy').map(role => ({ 
-          value: role._id, // Use the ID for the value
-          label: role.name 
-        })) 
+      {
+        label: 'Role',
+        name: 'role',
+        type: 'select',
+        options: roles.map(role => ({
+          value: role._id,
+          label: role.name
+        }))
       },
       {
-        label: 'Status', 
-        name: 'status', 
-        type: 'select', 
+        label: 'Status',
+        name: 'status',
+        type: 'select',
         options: [
           { value: 'Active', label: 'Active' },
           { value: 'Disabled', label: 'Disabled' },
@@ -305,15 +312,15 @@ const UpdateUser = ({
       { label: 'Address', name: 'street', type: 'text' },
       { label: 'City', name: 'city', type: 'text' },
       { label: 'State', name: 'state', type: 'text' },
-      ...(isAdmin ? [{ 
-        label: 'Pharmacy', 
-        name: 'pharmacyId', 
-        type: 'select', 
+      ...(isAdmin ? [{
+        label: 'Pharmacy',
+        name: 'pharmacyId',
+        type: 'select',
         options: pharmacies.map(pharmacy => ({
           value: pharmacy._id, // Use the ID for the value
           label: `${pharmacy.name} (${pharmacy.mnemonic})`
-        })) 
-      }] : []), 
+        }))
+      }] : []),
     ];
 
     return (
@@ -323,12 +330,12 @@ const UpdateUser = ({
         </h2>
         <div className="flex justify-left items-center mb-4">
           <button
-            className="flex items-center text-white px-3 py-2 rounded transition duration-300 hover:shadow-lg"
+            className="p-2 rounded-full shadow hover:opacity-90 transition"
             style={{ backgroundColor: brandColor }}
             onClick={handleCancel}
+            aria-label="Go back"
           >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="ml-1"></span>
+            <FaArrowLeft className="text-white" />
           </button>
           <button
             onClick={handleCommit}

@@ -117,26 +117,18 @@ const CreateRole = ({ permissions, onRoleCreated, brandColor, onNavigate }) => {
   };
 
   return (
-    <div className="mb-4">
+    <div className="">
       <input
         type="text"
         placeholder="Role Name"
         value={newRoleName}
         onChange={(e) => setNewRoleName(e.target.value)}
-        className="border rounded p-2 mb-2 w-full"
+        className="border rounded p-2 mb-1 w-full"
       />
-      <select
-        value={newRoleLevel}
-        onChange={(e) => setNewRoleLevel(e.target.value)}
-        className="border rounded p-2 mb-2 w-full"
-      >
-        <option value="Admin">Admin</option>
-        <option value="Pharmacy">Pharmacy</option>
-      </select>
-      <h4 className="text-lg mb-2">Permissions:</h4>
+      <h4 className="text-lg mb-1">Permissions:</h4>
       <div
         ref={permissionsRef}
-        className="max-h-40 overflow-y-auto mb-4 border"
+        className="max-h-40 overflow-y-auto mb-2 border"
         style={{ padding: '8px' }}
       >
         {permissions.map(permission => {
@@ -161,17 +153,17 @@ const CreateRole = ({ permissions, onRoleCreated, brandColor, onNavigate }) => {
           );
         })}
       </div>
-      <div className="flex justify-between mt-4">
+      <div className="flex justify-between">
         <button
           onClick={handleCreateNewRole}
-          className="text-white px-4 py-2 rounded"
+          className="text-white px-4 py-1 rounded"
           style={{ background: brandColor }}
         >
           Submit New Role
         </button>
         <button
           onClick={resetForm}
-          className="text-white px-4 py-2 rounded"
+          className="text-white px-4 py-1 rounded"
           style={{ background: brandColor }} 
         >
           Reset Form

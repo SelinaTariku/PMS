@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft } from "react-icons/fa";
 import PharmacyAPI from '../API/branchAPI';
 import Modal from '../Modal';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
@@ -152,18 +152,18 @@ const CreateBranch = ({ brandColor, handleCancel }) => {
   );
 
   const renderFields = () => (
-    <div className="p-2 bg-white rounded-lg shadow-lg max-h-87 overflow-y-auto">
+    <div className="p-2 m-2 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
       <h2 className="text-2xl font-bold ml-2 mb-1" style={{ color: brandColor }}>
         Create Branch
       </h2>
       <div className="flex justify-left items-center mb-4">
         <button
-          className="flex items-center text-white px-3 py-1 rounded transition duration-300 hover:shadow-lg"
+          className="p-2 rounded-full shadow hover:opacity-90 transition"
           style={{ backgroundColor: brandColor }}
           onClick={handleCancel}
+          aria-label="Go back"
         >
-          <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-          <span className="ml-1">Back</span>
+          <FaArrowLeft className="text-white" />
         </button>
         <button
           onClick={handleCommit}

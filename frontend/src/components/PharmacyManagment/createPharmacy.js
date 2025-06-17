@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft, FaSpinner } from "react-icons/fa";
 import PharmacyAPI from '../API/pharmacyApi';
 import Modal from '../Modal';
 
@@ -17,6 +17,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
     state: '',
     phone: '',
     email: '',
+    ownerFullName:'',
     licenseNumber: '',
     licenceDocument: '',
     licenseExpirationDate: '',
@@ -34,11 +35,10 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
       { path: 'name', label: 'Pharmacy Name' },
       { path: 'logo', label: 'Logo' },
       { path: 'brandColor', label: 'Brand Color' },
-      { path: 'street', label: 'Address' },
       { path: 'city', label: 'City' },
-      { path: 'state', label: 'State' },
       { path: 'phone', label: 'Phone' },
       { path: 'email', label: 'Email' },
+      {path: 'ownerFullName', label:'Full Name'},
       { path: 'licenseNumber', label: 'License Number' },
       { path: 'licenceDocument', label: 'License Document' },
       { path: 'licenseExpirationDate', label: 'License Expiration Date' },
@@ -257,6 +257,7 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
       { label: 'State', name: 'state', type: 'text' },
       { label: 'Phone', name: 'phone', type: 'text' },
       { label: 'Email', name: 'email', type: 'email' },
+      { label: 'Full Name', name: 'ownerFullName', type: 'text' },
       { label: 'License Number', name: 'licenseNumber', type: 'text' },
       { label: 'License Document', name: 'licenceDocument', type: 'file', accept: '.pdf' },
       { label: 'License Expiration Date', name: 'licenseExpirationDate', type: 'date' },
@@ -265,13 +266,14 @@ const CreatePharmacy = ({ brandColor, onCommit, handleCancel }) => {
     return (
       <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-y-auto" style={{ maxHeight: '70vh' }}>
         <div className="flex space-x-1 mb-5">
-          <button
-            className="flex items-center text-white px-3 rounded transition duration-300 hover:shadow-lg"
-            style={{ backgroundColor: brandColor }}
-            onClick={handleCancel}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-          </button>
+            <button
+                    onClick={handleCancel}
+                    className="p-2 rounded-full shadow hover:opacity-90 transition"
+                    style={{ backgroundColor: brandColor }}
+                    aria-label="Go back"
+                  >
+                    <FaArrowLeft className="text-white" />
+                  </button>
           <button
             className="flex items-center text-white px-5 rounded transition duration-300 hover:shadow-lg"
             style={{ backgroundColor: brandColor }}

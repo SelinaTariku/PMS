@@ -305,9 +305,10 @@ const UpdatePharmacyForm = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex space-x-3">
             <button
-              className="flex items-center text-white py-1 px-4 rounded transition duration-300 hover:shadow-lg"
+              className="p-2 rounded-full shadow hover:opacity-90 transition"
               style={{ backgroundColor: brandColor }}
               onClick={handleCancel}
+              aria-label="Go back"
             >
               <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
               <span className="ml-1"></span>

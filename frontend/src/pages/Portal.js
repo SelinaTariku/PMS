@@ -31,7 +31,7 @@ const brandColor = localStorage.getItem('brandColor')
   return (
     <div className="flex flex-col max-h-screen min-h-screen">
       <Header /> 
-      <div className="flex flex-1 flex-col md:flex-row mt-2 p-4">
+      <div className="flex flex-1 flex-col md:flex-row mt-1 p-4">
         <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} isVisible={isVisible} /> 
         <div className="flex justify-start h-10 mr-2 ">
           <button
@@ -42,7 +42,7 @@ const brandColor = localStorage.getItem('brandColor')
             <FontAwesomeIcon icon={isVisible ? faArrowLeft : faArrowRight} />
           </button>
         </div>
-        <main className="flex-1 p-4 bg-gray-100 w-full overflow-y-auto max-h-100 min-h-100">
+        <main className="flex-1 bg-gray-100 w-full overflow-y-auto max-h-100 min-h-100">
           <Outlet /> 
         </main>
       </div>

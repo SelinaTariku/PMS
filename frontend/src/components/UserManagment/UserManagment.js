@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faCaretUp, faCaretDown, faEye, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faCaretUp, faCaretDown, faEye, faSearch, faFileExport, faPlus } from '@fortawesome/free-solid-svg-icons';
 import userAPI from "../API/userApi";
-import UpdatePharmacyForm from './updateUser'; 
+import UpdatePharmacyForm from './updateUser';
 import ViewPharmacyDetail from './viewUser';
-import CreateUser from './createUser'; 
+import CreateUser from './createUser';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
 import axios from "axios";
-import Modal from '../Modal'; 
+import Modal from '../Modal';
 
-const PharmacyManagement = () => {
-  const initialuserData = () => ({
+const UserManagement = () => {
+  const initialUserData = () => ({
     fullName: '',
     email: '',
     role: '',
@@ -29,25 +29,37 @@ const PharmacyManagement = () => {
     CURR: 0,
   });
 
-  const [userData, setuserData] = useState(initialuserData());
+  // State management
+  const [userData, setUserData] = useState(initialUserData());
   const [isEditing, setIsEditing] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false); 
+  const [isCreating, setIsCreating] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
-  const [roleName, setroleName] = useState(null);
-  const [isAdmin, setisAdmin] = useState(false);
+  const [roleName, setRoleName] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [sortField, setSortField] = useState("name");
+  const [sortField, setSortField] = useState("email");
   const [sortDirection, setSortDirection] = useState("asc");
   const [searchValue, setSearchValue] = useState('');
-  const brandColor = localStorage.getItem('brandColor');
+  const [searchField, setSearchField] = useState('email'); // Default search field
+  const brandColor = localStorage.getItem('brandColor') || '#1E467A';
   const [errors, setErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(4); 
+  const [itemsPerPage] = useState(5);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  
+
+  // Searchable fields
+  const searchableFields = [
+    { value: 'email', label: 'Email' },
+    { value: 'fullName', label: 'Name' },
+    { value: 'phone', label: 'Phone' },
+    { value: 'status', label: 'Status' },
+    { value: 'role', label: 'Role' }
+  ];
+
+  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredResults.slice(indexOfFirstItem, indexOfLastItem);
@@ -55,13 +67,13 @@ const PharmacyManagement = () => {
 
   useEffect(() => {
     const fetchRole = async () => {
-      setLoading(true); 
+      setLoading(true);
       try {
         const role = localStorage.getItem('role');
         const response = await axios.get(`http://localhost:5000/role/getRoleById/${role}`);
         const roleName = response.data.name;
-        setroleName(roleName);
-        setisAdmin(roleName === 'Admin'); 
+        setRoleName(roleName);
+        setIsAdmin(roleName === 'Admin');
       } catch (error) {
         console.error("Error fetching role data:", error);
       } finally {
@@ -74,17 +86,14 @@ const PharmacyManagement = () => {
 
   useEffect(() => {
     const fetchRecord = async () => {
-      setLoading(true); 
+      setLoading(true);
       try {
         let data;
         if (isAdmin) {
           data = await userAPI.fetchAllLiveByRole();
-          console.log("User for Admin: ", data);
-        } else  {
-          
-          const pharmacyId = localStorage.getItem('pharmacy')
+        } else {
+          const pharmacyId = localStorage.getItem('pharmacy');
           data = await userAPI.fetchAllLiveByPharmacy(pharmacyId);
-          console.log("User for Manage: ", data);
         }
 
         if (data && data.length) {
@@ -99,7 +108,6 @@ const PharmacyManagement = () => {
           setSearchResults(usersWithRoles);
           setFilteredResults(usersWithRoles);
         } else {
-          console.warn("No users found for the current role.");
           setSearchResults([]);
           setFilteredResults([]);
         }
@@ -111,26 +119,27 @@ const PharmacyManagement = () => {
     };
 
     fetchRecord();
-    const intervalId = setInterval(fetchRecord, 5000);
-    return () => clearInterval(intervalId);
   }, [isAdmin]);
 
   useEffect(() => {
     if (searchValue) {
-      const filtered = searchResults.filter((pharmacy) =>
-        pharmacy.email.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.fullName.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.phone.toLowerCase().includes(searchValue.toLowerCase()) ||
-        pharmacy.status.toLowerCase().includes(searchValue.toLowerCase())
-      );
+      const filtered = searchResults.filter((user) => {
+        const fieldValue = user[searchField]?.toString().toLowerCase() || '';
+        return fieldValue.includes(searchValue.toLowerCase());
+      });
       setFilteredResults(filtered);
     } else {
       setFilteredResults(searchResults);
     }
-  }, [searchValue, searchResults]);
+  }, [searchValue, searchResults, searchField]);
 
   const handleSearchInputChange = (e) => {
-    setSearchValue(e.target.value.trim());
+    setSearchValue(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchFieldChange = (e) => {
+    setSearchField(e.target.value);
     setCurrentPage(1);
   };
 
@@ -150,54 +159,75 @@ const PharmacyManagement = () => {
   };
 
   const exportToCSV = () => {
-    return filteredResults.map(pharmacy => ({
-      Email: pharmacy.email,
-      Name: pharmacy.fullName,
-      Phone: pharmacy.phone,
-      Status: pharmacy.status,
-      Role: pharmacy.role // Include role in CSV export
+    return filteredResults.map(user => ({
+      Email: user.email,
+      Name: user.fullName,
+      Phone: user.phone,
+      Status: user.status,
+      Role: user.role,
+      'Created At': new Date(user.createdAt).toLocaleString()
     }));
   };
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["Email", "Pharmacy Name", "Phone Number", "Status", "Role", "Created At"];
-    const tableRows = [];
+    doc.text('User Management Report', 14, 15);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
-    filteredResults.forEach(pharmacy => {
-      const userData = [
-        pharmacy.email,
-        pharmacy.fullName,
-        pharmacy.phone,
-        pharmacy.status,
-        pharmacy.role,
-        pharmacy.createdAt,
-      ];
-      tableRows.push(userData);
+    const tableColumn = ["Email", "Name", "Phone", "Status", "Role", "Created At"];
+    const tableRows = filteredResults.map(user => [
+      user.email,
+      user.fullName,
+      user.phone,
+      user.status,
+      user.role,
+      new Date(user.createdAt).toLocaleString(),
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      styles: {
+        cellPadding: 3,
+        fontSize: 9,
+        valign: 'middle',
+        halign: 'left',
+      },
+      headStyles: {
+        fillColor: [brandColor],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      },
+      margin: { top: 30 }
     });
 
-    autoTable(doc, { head: [tableColumn], body: tableRows });
-    doc.save("user_data.pdf");
+    doc.save("user_report.pdf");
   };
 
-  const handleEdituserData = (pharmacy) => {
-    const loggedInUserId = localStorage.getItem('id'); 
-    if (loggedInUserId === pharmacy._id) {
+  const handleEditUserData = (user) => {
+    const loggedInUserId = localStorage.getItem('id');
+    if (loggedInUserId === user._id) {
       setModalMessage("You cannot edit your own account.");
-      setIsModalOpen(true); 
-      return; 
-    } 
-    setuserData(pharmacy);
+      setIsModalOpen(true);
+      return;
+    }
+    setUserData(user);
     setIsEditing(true);
     setIsViewing(false);
-    setIsCreating(false); 
+    setIsCreating(false);
   };
 
-  const handleViewuserData = (pharmacy) => {
-    setuserData(pharmacy);
+  const handleViewUserData = (user) => {
+    setUserData(user);
     setIsViewing(true);
     setIsEditing(false);
-    setIsCreating(false); 
+    setIsCreating(false);
   };
 
   const handleCancelView = () => {
@@ -208,194 +238,274 @@ const PharmacyManagement = () => {
     setIsEditing(false);
   };
 
-  const handleCreateNewPharmacy = () => {
-    setuserData(initialuserData()); 
+  const handleCreateNewUser = () => {
+    setUserData(initialUserData());
     setIsCreating(true);
     setIsEditing(false);
     setIsViewing(false);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" style={{ borderColor: brandColor }}></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container p-2">
+    <div className="container mx-auto px-4 py-6">
       {isViewing ? (
-        <ViewPharmacyDetail 
-          userData={userData} 
-          brandColor={brandColor} 
-          handleCancel={handleCancelView} 
+        <ViewPharmacyDetail
+          userData={userData}
+          brandColor={brandColor}
+          handleCancel={handleCancelView}
         />
       ) : isEditing ? (
-        <UpdatePharmacyForm 
-          userData={userData} 
-          setErrors={setErrors} 
-          errors={errors} 
-          brandColor={brandColor} 
-          isAdmin={isAdmin} 
-          onCommit={(updatedData) => {
-            console.log("Updated Pharmacy Data:", updatedData);
-            handleCancelEdit();
-          }} 
-          handleCancel={handleCancelEdit} 
+        <UpdatePharmacyForm
+          userData={userData}
+          setErrors={setErrors}
+          errors={errors}
+          brandColor={brandColor}
+          isAdmin={isAdmin}
+          onCommit={handleCancelEdit}
+          handleCancel={handleCancelEdit}
         />
       ) : isCreating ? (
-        <CreateUser 
-          userData={userData} 
-          setErrors={setErrors} 
-          errors={errors} 
-          brandColor={brandColor} 
-          isAdmin={isAdmin} 
-          onCommit={(newData) => {
-            console.log("Created New Pharmacy Data:", newData);
-            handleCancelEdit(); 
-          }} 
-          handleCancel={() => setIsCreating(false)} 
+        <CreateUser
+          userData={userData}
+          setErrors={setErrors}
+          errors={errors}
+          brandColor={brandColor}
+          isAdmin={isAdmin}
+          onCommit={() => setIsCreating(false)}
+          handleCancel={() => setIsCreating(false)}
         />
       ) : (
         <>
-          <div className="flex justify-between mb-2">
-            <div className="relative w-2/3 max-w-xs">
-              <label htmlFor="search" className="sr-only">Search Pharmacy</label>
-              <input
-                id="search"
-                type="search"
-                className="h-8 p-2 border rounded pl-10 w-full"
-                placeholder="Search"
-                onChange={handleSearchInputChange}
-              />
-              <FontAwesomeIcon
-                icon={faSearch}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                style={{ color: brandColor }}
-              />
-            </div>
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-1 mb-3">
+            <h1 className="text-2xl font-bold " style={{ color: brandColor }} >User Management</h1>
 
-            <div>
-              <CSVLink data={exportToCSV()} filename="user_data.csv" className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '5px 10px', borderRadius: '4px', textDecoration: 'none' }}>
-                Export to CSV
-              </CSVLink>
-              <button onClick={exportToPDF} className="btn ml-2" style={{ backgroundColor: brandColor, color: 'white', padding: '4px 10px', borderRadius: '4px' }}>
-                Export to PDF
-              </button>
-            </div>
-          </div>
+            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+              {/* Search Section */}
+              <div className="relative flex-grow md:w-64">
+                <div className="flex rounded-md shadow-sm">
+                  <select
+                    value={searchField}
+                    onChange={handleSearchFieldChange}
+                    className="inline-flex items-center px-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm"
+                  >
+                    {searchableFields.map(field => (
+                      <option key={field.value} value={field.value}>{field.label}</option>
+                    ))}
+                  </select>
+                  <div className="relative flex-grow">
+                    <input
+                      type="search"
+                      className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder={`Search by ${searchableFields.find(f => f.value === searchField)?.label || 'field'}...`}
+                      value={searchValue}
+                      onChange={handleSearchInputChange}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <FontAwesomeIcon icon={faSearch} className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <div className="flex justify-start mb-1">
-            <button 
-              onClick={handleCreateNewPharmacy}
-              className="btn"
-              style={{
-                backgroundColor: brandColor,
-                color: 'white',
-                padding: '5px 10px',
-                borderRadius: '4px',
-              }}>
-              Create New User
-            </button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCreateNewUser}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{ backgroundColor: brandColor }}
+                >
+                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                  New User
+                </button>
+
+                <div className="relative group">
+                  <button
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <FontAwesomeIcon icon={faFileExport} className="mr-2" />
+                    Export
+                  </button>
+                  <div className="absolute right-0 mt-1 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-10">
+                    <div className="py-1">
+                      <CSVLink
+                        data={exportToCSV()}
+                        filename="user_data.csv"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Export to CSV
+                      </CSVLink>
+                      <button
+                        onClick={exportToPDF}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Export to PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Table Section */}
-          <div className="mt-1">
-            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-              <thead className="bg-gray-100">
-                <tr>
-                  {['Email', 'Name', 'Phone No', 'Status', 'Role', 'Created At'].map((field) => (
-                    <th
-                      key={field}
-                      onClick={() => handleSort(field)}
-                      className="cursor-pointer px-4 py-1 text-left text-sm font-semibold text-gray-600"
-                      style={{ color: brandColor }}
-                    >
-                      {field.charAt(0).toUpperCase() + field.slice(1).replace('.', ' ')}
-                      {sortField === field && (
-                        <FontAwesomeIcon icon={sortDirection === "asc" ? faCaretUp : faCaretDown} className="ml-1" style={{ color: brandColor }} />
-                      )}
-                    </th>
-                  ))}
-                  <th className="px-4 py-1 text-left text-sm font-semibold text-gray-600">Edit</th>
-                  <th className="px-4 py-1 text-left text-sm font-semibold text-gray-600">View</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((pharmacy) => (
-                    <tr key={pharmacy._id} className="hover:bg-gray-100 transition duration-300">
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.email}</td>
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.fullName}</td>
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.phone}</td>
-                      <td className={`py-3 px-4 border-b border-gray-200 text-sm ${pharmacy.status === 'Active' ? 'text-green-500' : 'text-red-500'}`}>
-                        {pharmacy.status}
-                      </td>
-                      <td className="py-3 px-4 border-b border-gray-200 text-sm">{pharmacy.role}</td>
-                      <td className="px-3 py-4 border-b border-gray-200 text-sm">{new Date(pharmacy.createdAt).toLocaleString()}</td>
-                      <td className="px-2 border-b border-gray-200 text-sm">
-                        <button
-                          onClick={() => handleEdituserData(pharmacy)}
-                          className="hover:text-blue-700 transition duration-200"
-                        >
-                          <FontAwesomeIcon icon={faPencilAlt} />
-                        </button>
-                      </td>
-                      <td className="px-2 border-b border-gray-200 text-sm">
-                        <button
-                          onClick={() => handleViewuserData(pharmacy)}
-                          className="custom-button transition hover:text-blue-700 duration-200 px-2 py-1 rounded"
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </button>
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {['Email', 'Name', 'Phone', 'Status', 'Role', 'Created At'].map((field) => (
+                      <th
+                        key={field}
+                        onClick={() => handleSort(field.toLowerCase().replace(' ', ''))}
+                        className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        style={{ color: brandColor }}
+                      >
+                        <div className="flex items-center">
+                          {field}
+                          {sortField === field.toLowerCase().replace(' ', '') && (
+                            <FontAwesomeIcon
+                              icon={sortDirection === "asc" ? faCaretUp : faCaretDown}
+                              className="ml-1"
+                              style={{ color: brandColor }}
+                            />
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                    <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: brandColor }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentItems.length > 0 ? (
+                    currentItems.map((user) => (
+                      <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {user.email}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {user.fullName}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {user.phone}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                            ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {user.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {user.role}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(user.createdAt).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-4">
+                            <button
+                              onClick={() => handleEditUserData(user)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Edit"
+                            >
+                              <FontAwesomeIcon icon={faPencilAlt} />
+                            </button>
+                            <button
+                              onClick={() => handleViewUserData(user)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                              title="View"
+                            >
+                              <FontAwesomeIcon icon={faEye} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                        No users found matching your criteria
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center py-3">No users found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Pagination */}
-          <div className="flex justify-center items-center space-x-2 mt-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 rounded-l-lg"
-              style={{ background: brandColor, color: "white" }}
-            >
-              Previous
-            </button>
-            {[...Array(totalPages)].map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentPage(index + 1)}
-                className={`px-4 ${currentPage === index + 1 ? 'bg-gray-600 text-black' : 'bg-gray-100'} rounded-none`}
-                style={currentPage === index + 1 ? { backgroundColor: brandColor, color: 'white' } : {}}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-4 rounded-r-lg"
-              style={{ background: brandColor, color: "white" }}
-            >
-              Next
-            </button>
+            {/* Pagination */}
+            {filteredResults.length > 0 && (
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
+                      <span className="font-medium">{Math.min(indexOfLastItem, filteredResults.length)}</span> of{' '}
+                      <span className="font-medium">{filteredResults.length}</span> results
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                      >
+                        <span className="sr-only">Previous</span>
+                        Previous
+                      </button>
+
+                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                        const pageNum = currentPage <= 3 ? i + 1 :
+                          currentPage >= totalPages - 2 ? totalPages - 4 + i :
+                            currentPage - 2 + i;
+                        if (pageNum > totalPages || pageNum < 1) return null;
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === pageNum ?
+                              `z-10 bg-blue-50 border-blue-500 text-blue-600` :
+                              'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                      >
+                        <span className="sr-only">Next</span>
+                        Next
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Modal for edit restriction */}
-          {isModalOpen && (
-            <Modal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              message={modalMessage}
-              brandColor={brandColor}
-            />
-          )}
+          <Modal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            message={modalMessage}
+            brandColor={brandColor}
+          />
         </>
       )}
     </div>
   );
 };
 
-export default PharmacyManagement;
+export default UserManagement;

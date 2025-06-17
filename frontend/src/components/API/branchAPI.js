@@ -1,5 +1,5 @@
 const user = localStorage.getItem('id')
-
+const pharmacy = localStorage.getItem('pharmacy')
 const createData = async (updatedData) => {
   try {
     console.log("Sending data to the server:", updatedData);
@@ -26,10 +26,10 @@ const createData = async (updatedData) => {
     return null;
   }
 };
-const getBranchesByPharmacyId = async(id)=>{
+const getBranchesByPharmacyId = async()=>{
   try{
     const response = await fetch(
-      `http://localhost:5000/branches/getBranchesByPharmacyId/${id}`
+      `http://localhost:5000/branches/getBranchesByPharmacyId/${pharmacy}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch Branch data");

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 
 const ViewUserDetail = ({ userData, brandColor, handleCancel }) => {
   const [activeTab, setActiveTab] = useState('General Information');
   const [roleName, setRoleName] = useState(null);
   const [createdBy, setcreatedBy] = useState(null);
-  const [pharmacyId, setpharmacyId]=useState(null);
-  const [branchName, setbranchName]= useState(null);
+  const [pharmacyId, setpharmacyId] = useState(null);
+  const [branchName, setbranchName] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const ViewUserDetail = ({ userData, brandColor, handleCancel }) => {
 
     fetchRole();
   }, [userData.role]);
-  
+
   useEffect(() => {
     const fetchRole = async () => {
       try {
@@ -118,9 +118,9 @@ const ViewUserDetail = ({ userData, brandColor, handleCancel }) => {
           <DetailRow label="Role" value={loading ? 'Loading...' : roleName || 'N/A'} />
           <DetailRow label="Created At" value={new Date(userData.createdAt).toLocaleDateString()} />
           <DetailRow label="created By" value={loading ? 'Loading...' : createdBy || 'N/A'} />
-          
+
           <DetailRow label="Pharmacy" value={loading ? 'Loading...' : pharmacyId || 'N/A'} />
-          
+
           <DetailRow label="Branch" value={loading ? 'Loading...' : branchName || 'N/A'} />
         </tbody>
       </table>
@@ -131,11 +131,12 @@ const ViewUserDetail = ({ userData, brandColor, handleCancel }) => {
     <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-hidden">
       <div className="flex items-center mb-2">
         <button
-          onClick={handleCancel}
-          className="text-white py-1 px-4 rounded mb-2 hover:shadow-lg transition duration-300"
+          className="p-2 rounded-full shadow hover:opacity-90 transition"
           style={{ backgroundColor: brandColor }}
+          onClick={handleCancel}
+          aria-label="Go back"
         >
-          <FontAwesomeIcon icon={faArrowLeft} />
+          <FaArrowLeft className="text-white" />
         </button>
 
         <h2 className="text-2xl font-bold mb-2 ml-10" style={{ color: brandColor }}>User Details</h2>

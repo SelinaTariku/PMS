@@ -43,7 +43,7 @@ const PharmacyOverview = () => {
   );
 
   return (
-    <div className="bg-gray-100">
+    <div className="bg-gray-100 p-6">
       <div className="w-full">
         {!selectedCategory ? (
           <>

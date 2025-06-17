@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 
 const ViewBranchDetail = ({ branchData, brandColor, handleCancel }) => {
@@ -59,7 +59,7 @@ const ViewBranchDetail = ({ branchData, brandColor, handleCancel }) => {
 
   const generalInfoContent = () => {
     return (
-      <table className="min-w-full bg-white">
+      <table className="min-w-full bg-white" >
         <tbody>
           <DetailRow label="ID" value={branchData._id} />
           <DetailRow label="Branch Name" value={branchData.name} />
@@ -116,14 +116,15 @@ const ViewBranchDetail = ({ branchData, brandColor, handleCancel }) => {
   ];
 
   return (
-    <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-hidden">
+    <div className="container max-h-80 min-h-80 mb-10 p-4">
       <div className="flex items-center mb-2">
         <button
-          onClick={handleCancel}
-          className="text-white py-1 px-4 rounded mb-2 hover:shadow-lg transition duration-300"
+          className="p-2 rounded-full shadow hover:opacity-90 transition"
           style={{ backgroundColor: brandColor }}
+          onClick={handleCancel}
+          aria-label="Go back"
         >
-          <FontAwesomeIcon icon={faArrowLeft} />
+          <FaArrowLeft className="text-white" />
         </button>
 
         <h2 className="text-2xl font-bold mb-2 ml-10" style={{ color: brandColor }}>Branch Details</h2>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FaArrowLeft } from "react-icons/fa";
 import PharmacyAPI from '../API/pharmacyApi';
 import RejectPharmacyModal from './RejectPharmacyModal';
 import Modal from '../Modal'; // Import the Modal component
@@ -35,7 +35,7 @@ const ViewPharmacyDetail = ({ pharmacyData, handleCancel, onReject }) => {
                   alt="Logo Preview"
                   className="w-20 h-10 object-contain border border-gray-300 rounded"
                   onError={(e) => {
-                    e.target.src = '/path/to/default/logo.png'; 
+                    e.target.src = '/path/to/default/logo.png';
                   }}
                 />
               ) : (
@@ -140,11 +140,12 @@ const ViewPharmacyDetail = ({ pharmacyData, handleCancel, onReject }) => {
     <div className="p-2 bg-white rounded-lg shadow-lg max-h-screen overflow-hidden">
       <div className="flex items-center mb-2">
         <button
-          onClick={handleCancel}
-          className="text-white p-2 rounded mb-1 hover:shadow-lg transition duration-300"
+          className="p-2 rounded-full shadow hover:opacity-90 transition"
           style={{ backgroundColor: brandColor }}
+          onClick={handleCancel}
+          aria-label="Go back"
         >
-          <FontAwesomeIcon icon={faArrowLeft} />
+          <FaArrowLeft className="text-white" />
         </button>
         <h2 className="text-2xl font-bold ml-2" style={{ color: brandColor }}>
           Pharmacy Details
@@ -155,11 +156,10 @@ const ViewPharmacyDetail = ({ pharmacyData, handleCancel, onReject }) => {
         {tabs.map((tab) => (
           <button
             key={tab.label}
-            className={`px-4 py-1 mr-2 rounded transition duration-300 ${
-              activeTab === tab.label
+            className={`px-4 py-1 mr-2 rounded transition duration-300 ${activeTab === tab.label
                 ? `bg-[${brandColor}] text-white`
                 : 'bg-gray-300 text-black hover:bg-gray-400'
-            }`}
+              }`}
             onClick={() => setActiveTab(tab.label)}
             style={{
               backgroundColor: activeTab === tab.label ? brandColor : 'lightgray',

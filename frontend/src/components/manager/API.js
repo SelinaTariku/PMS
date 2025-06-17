@@ -15,27 +15,7 @@ const fetchBranchByPharmacy = async (id) => {
     }
   };
 
-  const fetchAllNAU = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/branches/getUnauthorizedBranchesByPharmacyId/${pharmacy}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch NAU branches");
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching NAU branches:", error);
-      return [];
-    }
-  };
-
-
-
-
-
-  const fetchLiveById = async (id) => {
+const fetchLiveById = async (id) => {
     try {
       const response = await fetch(
         `http://localhost:5000/users/users/${id}`

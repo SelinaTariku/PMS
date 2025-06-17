@@ -9,12 +9,12 @@ const BranchOverview = () => {
     dailyRegistration: 0,
   });
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const brandColor = localStorage.getItem('brandColor') || '#1E467A'; // Default color
-
+  const brandColor = localStorage.getItem('brandColor') || '#1E467A'; 
+  const pharmacy = localStorage.getItem('pharmacy')
   useEffect(() => {
     const fetchSummaryData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/branches/branchOverview");
+        const response = await fetch(`http://localhost:5000/branches/branchOverviewByPharmacy/${pharmacy}`);
         const result = await response.json();
         setSummaryData(result);
       } catch (error) {
@@ -40,7 +40,7 @@ const BranchOverview = () => {
   );
 
   return (
-    <div className="bg-gray-100">
+    <div className="bg-gray-100 p-6">
       <div className="container mx-auto w-full max-w-screen-2xl">
         {!selectedCategory ? (
           <>
